@@ -981,16 +981,16 @@ function renderProv(p){
   const [ny,nm]=ymShift(cur,-p.lag), nowE=earnedAt(p,ny,nm);
   const bankNow=typeof inc[p.id]==="number"?inc[p.id]:(nowE?nowE.val:null);
   const [xy,xm]=ymShift(cur,1-p.lag), nextE=earnedAt(p,xy,xm);
-  const nextPay=ymShift(cur,1)[1];
+  const nextPay=ymShift(cur,1)[1], due=provDueFor(p,cur);
   const [zy,zm]=ymShift(cur,p.lag);
   const cash=`<div class="cash">
     <div><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><b class="num">${bankNow!=null?fmt2(bankNow)+" ₪":"עוד לא ידוע"}</b><span class="small muted">על האימונים של ${MONTHS[nm-1]}${ny!==YEAR?" "+ny:""}</span></div>
-    <div><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}</span><b class="num">${nextE?fmt2(nextE.val)+" ₪":"0 ₪"}</b><span class="small muted">על האימונים של ${MONTHS[xm-1]}${xy!==YEAR?" "+xy:""}</span></div>
+    <div><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}</span><b class="num">${fmt2(due||0)} ₪</b><span class="small muted">על האימונים של ${MONTHS[xm-1]}${xy!==YEAR?" "+xy:""}</span></div>
     <div><span class="small muted">ייכנס ב${MONTHS[zm-1]}${zy!==YEAR?" "+zy:""}</span><b class="num">${pe?fmt2(pe.val)+" ₪":"0 ₪"}</b><span class="small muted">על האימונים של ${MONTHS[cur-1]}${pe&&pe.src==="calendar"?" · לפי היומן":""}</span></div>
   </div>`;
   const payNote=`<p class="small muted pv-note">האימונים של ${MONTHS[cur-1]} ייכנסו לבנק ב${MONTHS[pm-1]}${payY!==YEAR?" "+payY:""}${p.payDay?`, בערך ב־${p.payDay}.${pm}`:""}.</p>`;
   box.innerHTML=`<div class="lg lg-prov" style="--pc:${p.color}">
-    <button type="button" class="lg-h prov-toggle" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${p.name}</b><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><span class="lg-sum num">${bankNow!=null?fmt2(bankNow)+" ₪":"—"}</span></button>
+    <button type="button" class="lg-h prov-toggle" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${p.name}</b><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}${p.payDay?` (בערך ב־${p.payDay}.${nextPay})`:""}</span><span class="lg-sum num">${fmt2(due||0)} ₪</span></button>
     <div class="pv-body"${open?"":" hidden"}>
     ${cash}
     ${payNote}
@@ -1038,8 +1038,15 @@ function provBankFor(p,m){
   const inc=getM(m).income||{}; if(typeof inc[p.id]==="number") return inc[p.id];
   const [y,mm]=ymShift(m,-p.lag), e=earnedAt(p,y,mm); return e?e.val:null;
 }
-function provTotal(m){ return PROV.reduce((a,p)=>a+(provBankFor(p,m)||0),0); }
-function provAny(m){ return PROV.some(p=>provBankFor(p,m)!=null); }
+// a month's income is what that month's work brings in around the 10th of the next month,
+// so for an agency it is the payout landing next month (earned p.lag-1 months before this one)
+function provDueFor(p,m){
+  const [y,mm]=ymShift(m,1), inc=(data[y+"-"+String(mm).padStart(2,"0")]||{}).income||{};
+  if(typeof inc[p.id]==="number") return inc[p.id];
+  const [ey,em]=ymShift(m,1-p.lag), e=earnedAt(p,ey,em); return e?e.val:null;
+}
+function provTotal(m){ return PROV.reduce((a,p)=>a+(provDueFor(p,m)||0),0); }
+function provAny(m){ return PROV.some(p=>provDueFor(p,m)!=null); }
 const dShort=new Intl.DateTimeFormat("he-IL",{timeZone:TZ,weekday:"short"});
 function renderIncome(){
   renderProvs();
@@ -1050,7 +1057,7 @@ function renderIncome(){
   const pay=l=>Math.round(l.reduce((a,x)=>a+x.pay,0)*100)/100, rp=pay(reg), cp=pay(cty);
   // split bar + legend (same look as expenses)
   const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות HIIT",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"]];
-  PROV.forEach(p=>parts.push([p.name,provBankFor(p,cur)||0,p.color]));
+  PROV.forEach(p=>parts.push([p.name,provDueFor(p,cur)||0,p.color]));
   parts.push(["עסק",biz,"var(--gov)"]);
   const tot=parts.reduce((a,p)=>a+p[1],0);
   $("inSplit").innerHTML=tot>0?parts.filter(p=>p[1]>0).map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}"></span>`).join(""):"";
