@@ -1268,8 +1268,9 @@ function cloudLogin(){
       <button type="button" class="linkbtn" id="l-reset">שכחתי סיסמה</button>
     </form>`);
   const em=()=>$("l-email").value.trim(), pw=()=>$("l-pass").value;
+  try{ const last=localStorage.getItem("money_email"); if(last){ $("l-email").value=last; $("l-pass").focus(); } }catch(e){}
   const err=e=>{ const el=$("l-err"); el.textContent=(e&&AUTH_ERR[e.code])||"משהו השתבש. נסה שוב."; el.hidden=false; };
-  $("lform").addEventListener("submit",async ev=>{ ev.preventDefault(); $("l-err").hidden=true; try{ await FB.auth.signInWithEmailAndPassword(em(),pw()); closeModal(); }catch(e){ err(e); } });
+  $("lform").addEventListener("submit",async ev=>{ ev.preventDefault(); $("l-err").hidden=true; try{ await FB.auth.signInWithEmailAndPassword(em(),pw()); try{ localStorage.setItem("money_email",em()); }catch(e){} closeModal(); }catch(e){ err(e); } });
   $("l-reset").addEventListener("click",async()=>{
     if(!em()){ err({code:"auth/invalid-email"}); return; }
     try{ await FB.auth.sendPasswordResetEmail(em()); closeModal(); toast("נשלח מייל לאיפוס הסיסמה"); }catch(e){ err(e); }
