@@ -156,10 +156,11 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .lg-cty .grp-toggle .caret{color:var(--save)}
 .grp-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .lg-prov{margin-top:14px}
-.cash{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 2px}
+.pv-note{padding:8px 2px 2px;margin:0}
+.cash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 2px}
 .cash>div{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:8px;padding:8px 10px;min-width:0}
 .cash b{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--pc)}
-@media (max-width:480px){.cash{grid-template-columns:1fr}}
+@media (max-width:480px){.cash{gap:6px}.cash>div{padding:8px}.cash b{font-size:17px}.cash .small{font-size:12px}}
 .prov-toggle{font:inherit;color:inherit;background:none;border:0;border-bottom:2px solid var(--pc);width:100%;text-align:right;cursor:pointer}
 .prov-toggle .caret{color:var(--pc);font-size:14px;width:12px}
 .lg-prov .lg-sum{color:var(--pc)}
@@ -610,7 +611,7 @@ function renderMonth(){
   const byCat={home:0,car:0,gov:0,save:0}; rows.forEach(r=>byCat[r.p.cat]+=r.a);
   const inc=md.income||{};
   if(shLoadedFor!==cur) loadShifts();
-  ensureMonth(cur-1);
+  ensureMonth(cur-1); ensureMonth(cur-2);
   const shS=shifts[key(cur)], shTot=shS&&shS.ok?shS.total:null, manual=false;
   const sal=manual?inc.hiit:shTot;
   const pv=provTotal(cur);
@@ -963,14 +964,18 @@ function renderProv(p){
   const bankNow=typeof inc[p.id]==="number"?inc[p.id]:(nowE?nowE.val:null);
   const [xy,xm]=ymShift(cur,1-p.lag), nextE=earnedAt(p,xy,xm);
   const nextPay=ymShift(cur,1)[1];
+  const [zy,zm]=ymShift(cur,p.lag);
   const cash=`<div class="cash">
     <div><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><b class="num">${bankNow!=null?fmt2(bankNow)+" ₪":"עוד לא ידוע"}</b><span class="small muted">על האימונים של ${MONTHS[nm-1]}${ny!==YEAR?" "+ny:""}</span></div>
-    <div><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}${p.payDay?` (בערך ב־${p.payDay}.${nextPay})`:""}</span><b class="num">${nextE?fmt2(nextE.val)+" ₪":"עוד לא ידוע"}</b><span class="small muted">על האימונים של ${MONTHS[xm-1]}${xy!==YEAR?" "+xy:""}${nextE&&nextE.src==="calendar"?" · הערכה מהיומן":""}</span></div>
+    <div><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}</span><b class="num">${nextE?fmt2(nextE.val)+" ₪":"0 ₪"}</b><span class="small muted">על האימונים של ${MONTHS[xm-1]}${xy!==YEAR?" "+xy:""}</span></div>
+    <div><span class="small muted">ייכנס ב${MONTHS[zm-1]}${zy!==YEAR?" "+zy:""}</span><b class="num">${pe?fmt2(pe.val)+" ₪":"0 ₪"}</b><span class="small muted">על האימונים של ${MONTHS[cur-1]}${pe&&pe.src==="calendar"?" · לפי היומן":""}</span></div>
   </div>`;
+  const payNote=`<p class="small muted pv-note">האימונים של ${MONTHS[cur-1]} ייכנסו לבנק ב${MONTHS[pm-1]}${payY!==YEAR?" "+payY:""}${p.payDay?`, בערך ב־${p.payDay}.${pm}`:""}.</p>`;
   box.innerHTML=`<div class="lg lg-prov" style="--pc:${p.color}">
-    <button type="button" class="lg-h prov-toggle" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${p.name}</b><span class="small muted">על האימונים של ${MONTHS[cur-1]} · ייכנס ${when}${c&&pe&&pe.src==="calendar"?` · ${c.list.length} אימונים × ${p.rate} ₪`:""}</span><span class="lg-sum num">${pe?fmt2(pe.val)+" ₪":"—"}</span></button>
+    <button type="button" class="lg-h prov-toggle" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${p.name}</b><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><span class="lg-sum num">${bankNow!=null?fmt2(bankNow)+" ₪":"—"}</span></button>
     ${cash}
     <div class="pv-body"${open?"":" hidden"}>
+    ${payNote}
     ${rows}
     <div class="row"><div class="day">—<small>ידני</small></div><div class="what"><b>סכום לפי הדוח</b><div class="meta">${p.report}</div></div><input class="amt prov-in" type="number" inputmode="decimal" step="any" value="${typeof inc[fld]==="number"?inc[fld]:""}" placeholder="${c?c.total:0}" aria-label="סכום ${p.name} לפי הדוח"><span></span></div>
     ${chips}
@@ -1010,8 +1015,13 @@ function ensureMonth(m){
   if(calState==="none"||m<1||m>12) return; const k=key(m);
   if(!calTried[k]) refreshMonth(m); else applyCal(k);
 }
-function provTotal(m){ return PROV.reduce((a,p)=>{const e=provEarnedFor(p,m); return a+(e?e.val:0);},0); }
-function provAny(m){ return PROV.some(p=>provEarnedFor(p,m)!=null); }
+// what reaches the bank in month m: the amount noted as received, else what was earned p.lag months earlier
+function provBankFor(p,m){
+  const inc=getM(m).income||{}; if(typeof inc[p.id]==="number") return inc[p.id];
+  const [y,mm]=ymShift(m,-p.lag), e=earnedAt(p,y,mm); return e?e.val:null;
+}
+function provTotal(m){ return PROV.reduce((a,p)=>a+(provBankFor(p,m)||0),0); }
+function provAny(m){ return PROV.some(p=>provBankFor(p,m)!=null); }
 const dShort=new Intl.DateTimeFormat("he-IL",{timeZone:TZ,weekday:"short"});
 function renderIncome(){
   renderProvs();
@@ -1021,8 +1031,8 @@ function renderIncome(){
   const reg=ok?s.list.filter(x=>!x.isC):[], cty=ok?s.list.filter(x=>x.isC):[];
   const pay=l=>Math.round(l.reduce((a,x)=>a+x.pay,0)*100)/100, rp=pay(reg), cp=pay(cty);
   // split bar + legend (same look as expenses)
-  const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות רגילות",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"]];
-  PROV.forEach(p=>{const e=provEarnedFor(p,cur); parts.push([p.name,e?e.val:0,p.color]);});
+  const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות HIIT",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"]];
+  PROV.forEach(p=>parts.push([p.name,provBankFor(p,cur)||0,p.color]));
   parts.push(["עסק",biz,"var(--gov)"]);
   const tot=parts.reduce((a,p)=>a+p[1],0);
   $("inSplit").innerHTML=tot>0?parts.filter(p=>p[1]>0).map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}"></span>`).join(""):"";
@@ -1055,7 +1065,7 @@ function renderIncome(){
     const open=!!grpOpen[cls];
     return `<div class="lg ${cls}"><button type="button" class="lg-h grp-toggle" data-g="${cls}" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${title}</b><span class="small muted">${list.length===1?"משמרת אחת":list.length+" משמרות"} · ${fmt2(h)} שעות</span><span class="lg-sum num">${fmt2(sum)} ₪</span></button><div class="grp-body"${open?"":" hidden"}>${list.map(rowOf).join("")}</div></div>`;
   };
-  const rows=grp("משמרות רגילות",reg,rp,"lg-reg")+grp("משמרות קנטרי",cty,cp,"lg-cty");
+  const rows=grp("משמרות HIIT",reg,rp,"lg-reg")+grp("משמרות קנטרי",cty,cp,"lg-cty");
   const notes=s.flags.map(f=>`<div class="sh-notice" style="background:var(--warn-bg);color:var(--warn)">${esc(f)}</div>`).join("");
   body.innerHTML=(rows||`<p class="muted small">אין משמרות ביומן בחודש הזה.</p>`)+notes
     +(manual&&rows?`<p class="small muted">בחודש הזה רשמת משכורת בפועל, אז היא נספרת בסיכום במקום המשמרות.</p>`:"");
