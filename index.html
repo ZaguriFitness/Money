@@ -334,7 +334,6 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
         <div class="group-h"><h3>מה נכנס החודש</h3><span class="small muted" id="incSub"></span></div>
         <div class="ledger" id="incBody"><p class="muted small">המשמרות נטענות מהיומן…</p></div>
         <div id="provBoxes"></div>
-        <div id="movBox"></div>
         <div class="ledger inc-static">
           <div class="row"><div class="day">—<small>ידני</small></div>
             <div class="what"><b>עסק (עוסק פטור)</b><span class="chip c-gov">עסק</span><div class="meta">המחזור של החודש. נספר גם לתקרת עוסק פטור.</div></div>
@@ -947,7 +946,7 @@ function sgroup(title,list,cls,chip,emptyTxt){
 /* ---------- training agencies (from the profile): earned by training month, paid later ---------- */
 let PROV=[];
 const provNames={}, provOpen={};
-const srcList=()=>PROV.concat(PROFILE.extra?[PROFILE.extra]:[]);
+const srcList=()=>PROV;
 const provById=id=>PROV.find(p=>p.id===id);
 function provCalc(p,m){
   const s=shifts[key(m)]; if(!s||!s.ok) return null;
@@ -995,7 +994,7 @@ function renderProv(p){
     ${cash}
     ${payNote}
     ${rows}
-    <div class="row"><div class="day">—<small>ידני</small></div><div class="what"><b>סכום לפי הדוח</b><div class="meta">${p.report}</div></div><input class="amt prov-in" type="number" inputmode="decimal" step="any" value="${typeof inc[fld]==="number"?inc[fld]:""}" placeholder="${c?c.total:0}" aria-label="סכום ${p.name} לפי הדוח"><span></span></div>
+    <div class="row"><div class="day">—<small>ידני</small></div><div class="what"><b>סכום לפי הדוח</b><div class="meta">${p.report||`כשמגיע הדוח מ${p.name}, אפשר לכתוב כאן את הסכום הסופי. הוא מחליף את החישוב מהיומן.`}</div></div><input class="amt prov-in" type="number" inputmode="decimal" step="any" value="${typeof inc[fld]==="number"?inc[fld]:""}" placeholder="${c?c.total:0}" aria-label="סכום ${p.name} לפי הדוח"><span></span></div>
     ${chips}
     </div>
   </div>`;
@@ -1007,21 +1006,7 @@ function renderProv(p){
     if(db) db.doc("settings/"+p.id).set({names:next}).catch(()=>{});
   }));
 }
-let movOpen=false;
-function renderMov(){
-  const box=$("movBox"), X=PROFILE.extra; if(!box) return;
-  if(!X){ box.innerHTML=""; return; }
-  const s=shifts[key(cur)], list=s&&s.ok?(s.trainings||[]).filter(x=>x.tag===X.id):[];
-  const rows=!s||s.loading?`<p class="muted small" style="padding:8px 2px">האימונים נטענים מהיומן…</p>`
-    : list.length?list.map(x=>`<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div><div class="what"><b>אימון</b><span class="chip" style="background:var(--mov-bg);color:var(--mov)">${esc(x.name)}</span><div class="meta"><span dir="ltr">${tFmt.format(x.s)}</span> · ${X.rate} ₪ לאימון</div></div><span class="amt amt-ro num">${X.rate}</span><span class="pill ${x.s>new Date()?"s-none":"s-paid"}" style="cursor:default">${x.s>new Date()?"מתוכנן":"בוצע"}</span></div>`).join("")
-    : `<p class="muted small" style="padding:8px 2px">אין ביומן החודש אימונים עם "_${esc(X.name)}" בשם.</p>`;
-  box.innerHTML=`<div class="lg lg-prov" style="--pc:var(--mov)">
-    <button type="button" class="lg-h prov-toggle" aria-expanded="${movOpen}"><span class="caret" aria-hidden="true">${movOpen?"▾":"‹"}</span><b>${esc(X.name)}</b><span class="small muted">${list.length?(list.length===1?"אימון אחד":list.length+" אימונים")+" החודש · ":""}סכומים ותנאי תשלום עוד בבדיקה</span><span class="lg-sum num">—</span></button>
-    <div class="pv-body"${movOpen?"":" hidden"}>${rows}<p class="small muted" style="padding:8px 2px;border-top:1px solid var(--line);margin:0">כאן מופיעים רק האימונים. הם לא נספרים בהכנסות עד שנקבע כמה ומתי ${esc(X.name)} משלמת.</p></div>
-  </div>`;
-  box.querySelector(".prov-toggle").addEventListener("click",()=>{movOpen=!movOpen; renderMov();});
-}
-function renderProvs(){ [...$("provBoxes").children].forEach(b=>{ if(!PROV.some(p=>"prov-"+p.id===b.id)) b.remove(); }); PROV.forEach(renderProv); renderMov(); }
+function renderProvs(){ [...$("provBoxes").children].forEach(b=>{ if(!PROV.some(p=>"prov-"+p.id===b.id)) b.remove(); }); PROV.forEach(renderProv); }
 function ymShift(m,d){ let y=YEAR, mm=m+d; while(mm<1){mm+=12;y--;} while(mm>12){mm-=12;y++;} return [y,mm]; }
 function earnedAt(p,y,m){
   const inc=(data[y+"-"+String(m).padStart(2,"0")]||{}).income||{}, f=inc[p.id+"Earned"];
@@ -1163,7 +1148,8 @@ function applyProfile(v){
   PROFILE=Object.assign({payments:[],yearly:[],rate:0,satRate:0,prov:[],extra:null,text:{}},v||{});
   P=PROFILE.payments||[]; YEARLY=PROFILE.yearly||[]; RATE=PROFILE.rate||0; SAT_RATE=PROFILE.satRate||0;
   const COLORS=[["var(--car)","var(--car-bg)"],["var(--gov)","var(--gov-bg)"]];
-  PROV=(PROFILE.prov||[]).map((p,i)=>Object.assign({color:COLORS[i%2][0],bg:COLORS[i%2][1]},p));
+  const COLORS2=[["var(--car)","var(--car-bg)"],["var(--mov)","var(--mov-bg)"],["var(--gov)","var(--gov-bg)"]];
+  PROV=(PROFILE.prov||[]).concat(PROFILE.extra?[Object.assign({lag:2},PROFILE.extra)]:[]).map((p,i)=>Object.assign({color:COLORS2[i%3][0],bg:COLORS2[i%3][1]},p));
   PROV.forEach(p=>{ if(!provNames[p.id]) provNames[p.id]=[]; if(!(p.id in provOpen)) provOpen[p.id]=false; });
   document.querySelectorAll("[data-t]").forEach(el=>{ el.innerHTML=(PROFILE.text||{})[el.dataset.t]||""; });
   $("inFoot").textContent=`נספרים רק אירועים ביומן הראשי שלך ב־Google שהשם שלהם מתחיל ב"משמרת". "משמרת_קנטרי" נספרת בנפרד.${RATE?` משמרת שמתחילה בשבת משולמת ${SAT_RATE} ₪ לשעה, ושאר המשמרות ${RATE} ₪ לשעה.`:""} אירועים עם "אימון" בשם לא נספרים. האפליקציה רק קוראת מהיומן ולא משנה בו כלום.`;
@@ -1190,13 +1176,36 @@ function attachDb(d){
   },()=>{}));
   unsubs.push(d.collection("months").onSnapshot(snap=>{
     const next={}; snap.docs.forEach(doc=>{next[doc.id]=doc.data();});
-    data=next; loaded=true; renderAll();
+    data=next; loaded=true; renderAll(); applyPatch();
   },()=>{ saveMsg("לא הצלחתי לקרוא את הנתונים מהענן. בדוק חיבור לאינטרנט."); }));
 }
 
 /* ---------- one-time import (data arrives in the link's #hash, which never reaches the server) ---------- */
 const IMPK="money_import";
 function pendingImport(){ try{ return JSON.parse(localStorage.getItem(IMPK)||"null"); }catch(e){ return null; } }
+const PATCHK="money_patch";
+function readPatchHash(){
+  const h=location.hash||""; if(!h.startsWith("#patch=")) return;
+  history.replaceState(null,"",location.pathname+location.search);
+  try{
+    const b=atob(h.slice(7).replace(/-/g,"+").replace(/_/g,"/"));
+    const v=JSON.parse(new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))));
+    if(!v||typeof v.months!=="object") throw 0;
+    localStorage.setItem(PATCHK,JSON.stringify(v));
+  }catch(e){ toast("קישור העדכון לא תקין"); }
+}
+function applyPatch(){
+  if(!db||db.kind!=="cloud"||!loaded) return;
+  let v=null; try{ v=JSON.parse(localStorage.getItem(PATCHK)||"null"); }catch(e){}
+  if(!v) return;
+  try{ localStorage.removeItem(PATCHK); }catch(e){}
+  Object.entries(v.months).forEach(([kk,patch])=>{
+    const md=JSON.parse(JSON.stringify(data[kk]||{items:{},income:{}}));
+    ["income","items"].forEach(f=>{ if(patch[f]) md[f]=Object.assign(md[f]||{},patch[f]); });
+    data[kk]=md; write(kk,md);
+  });
+  renderAll(); toast("העדכון נשמר");
+}
 function readImportHash(){
   const h=location.hash||"";
   if(!h.startsWith("#import=")) return;
@@ -1296,6 +1305,7 @@ let toastT=null;
 function toast(msg){ const el=$("toast"); el.textContent=msg; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{el.hidden=true;},3000); }
 
 readImportHash();
+readPatchHash();
 renderPayments();
 attachDb(localDb());
 initCloud();
