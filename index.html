@@ -797,7 +797,9 @@ function classifyShifts(events){
     }
     const s=new Date(e.start.dateTime), en=new Date(e.end.dateTime);
     const hrs=Math.round((en-s)/60000)/60, sat=wdFmt.format(s)==="Sat", rate=sat?SAT_RATE:RATE;
-    const sh={t,s,en,hrs,sat,isC,rate,pay:Math.round(hrs*rate*100)/100,fl:[]};
+    // "+30" in the title is an extra amount for that shift; "+ name" without a number adds nothing
+    const bonus=[...t.matchAll(/\+\s*(\d+(?:\.\d+)?)/g)].reduce((a,m)=>a+Number(m[1]),0);
+    const sh={t,s,en,hrs,sat,isC,rate,bonus,pay:Math.round((hrs*rate+bonus)*100)/100,fl:[]};
     if(isC && !t.startsWith("משמרת_קנטרי")) sh.fl.push("השם לא כתוב \"משמרת_קנטרי\". נספרה כקנטרי.");
     if(hrs>12) sh.fl.push("יותר מ־12 שעות. לוודא שהשעות נכונות.");
     if(e.start.timeZone && e.start.timeZone!==TZ) sh.fl.push("שמורה באזור זמן "+e.start.timeZone+". חושב לפי שעון ישראל.");
@@ -806,7 +808,7 @@ function classifyShifts(events){
   list.sort((a,b)=>a.s-b.s);
   for(let i=1;i<list.length;i++) if(list[i].s<list[i-1].en){list[i].fl.push("חופפת למשמרת אחרת.");list[i-1].fl.push("חופפת למשמרת אחרת.");}
   const hours=list.reduce((s,x)=>s+x.hrs,0), satH=list.filter(x=>x.sat).reduce((s,x)=>s+x.hrs,0);
-  const total=Math.round(list.reduce((s,x)=>s+x.hrs*x.rate,0)*100)/100;
+  const total=Math.round(list.reduce((s,x)=>s+x.pay,0)*100)/100;
   const now=new Date(), fut=list.filter(x=>x.s>now).reduce((s,x)=>s+x.pay,0);
   trainings.sort((a,b)=>a.s-b.s);
   return {ok:true,list,flags,hours,satH,total,fut,trainings};
@@ -1017,7 +1019,7 @@ function renderIncome(){
   const inc=getM(cur).income||{}, biz=typeof inc.biz==="number"?inc.biz:0, manual=false;
   const s=shifts[key(cur)], ok=s&&s.ok;
   const reg=ok?s.list.filter(x=>!x.isC):[], cty=ok?s.list.filter(x=>x.isC):[];
-  const pay=l=>Math.round(l.reduce((a,x)=>a+x.hrs*x.rate,0)*100)/100, rp=pay(reg), cp=pay(cty);
+  const pay=l=>Math.round(l.reduce((a,x)=>a+x.pay,0)*100)/100, rp=pay(reg), cp=pay(cty);
   // split bar + legend (same look as expenses)
   const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות רגילות",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"]];
   PROV.forEach(p=>{const e=provEarnedFor(p,cur); parts.push([p.name,e?e.val:0,p.color]);});
@@ -1042,7 +1044,7 @@ function renderIncome(){
     const fut=x.s>now, type=x.isC?"קנטרי":"רגילה";
     return `<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div>
       <div class="what"><b>משמרת</b><span class="chip ${x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}
-        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪</div>
+        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}</div>
         ${x.fl.map(f=>`<div class="meta" style="color:var(--warn)">${esc(f)}</div>`).join("")}</div>
       <span class="amt amt-ro num">${fmt2(x.pay)}</span>
       <span class="pill ${fut?"s-none":"s-paid"}" style="cursor:default">${fut?"מתוכננת":"עבדתי"}</span></div>`;
