@@ -1,6 +1,6 @@
 {
-  "name": "הכסף שלי",
-  "short_name": "הכסף שלי",
+  "name": "MyMoney",
+  "short_name": "MyMoney",
   "lang": "he",
   "dir": "rtl",
   "start_url": "./",

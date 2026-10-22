@@ -1,4 +1,4 @@
-# הכסף שלי
+# MyMoney
 
 אפליקציית ווב (PWA) למעקב אחרי תשלומים קבועים, הכנסות ומשמרות.
 כתובת: https://zagurifitness.github.io/Money/
