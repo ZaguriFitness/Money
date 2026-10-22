@@ -823,6 +823,9 @@ function gConnect(){
   try{ localStorage.setItem("money_gstate",st); localStorage.setItem("money_cur",String(cur)); }catch(e){}
   const q=new URLSearchParams({client_id:GOOGLE_CLIENT_ID,redirect_uri:location.origin+location.pathname,response_type:"token",
     scope:"https://www.googleapis.com/auth/calendar.readonly",include_granted_scopes:"true",state:st});
+  // the calendar's own account, so Google skips the account picker next time
+  let hint=null; try{ hint=localStorage.getItem("money_ghint"); }catch(e){}
+  if(hint) q.set("login_hint",hint);
   location.href="https://accounts.google.com/o/oauth2/v2/auth?"+q;
 }
 async function fetchMonth(m){
@@ -856,13 +859,28 @@ function refreshMonth(m){
   if(!gToken()){ shifts[k]=shifts[k]&&shifts[k].ok?Object.assign(shifts[k],{needAuth:true}):{needAuth:true}; return; }
   if(!shifts[k]) shifts[k]={loading:true};
   fetchMonth(m).then(v=>{
-    calDocs[k]=v; applyCal(k);
+    calDocs[k]=v; applyCal(k); rememberCalAccount();
     if(db) db.collection("cal").doc(k).set(v).catch(()=>{});
   }).catch(e=>{
     const s=shifts[k]&&shifts[k].ok?shifts[k]:null;
     if(e&&e.code==="auth") shifts[k]=s?Object.assign(s,{needAuth:true}):{needAuth:true};
     else { const er={msg:e&&e.status===403?"Google לא מאשר גישה ליומן. צריך לחבר מחדש.":"לא הצלחתי לקרוא מהיומן. בדוק חיבור לאינטרנט ולחץ \"רענון\"."}; shifts[k]=s?Object.assign(s,{stale:true,error:er}):{error:er}; }
   }).then(()=>renderAll());
+}
+function rememberCalAccount(){
+  try{ if(localStorage.getItem("money_ghint")) return; }catch(e){ return; }
+  const tok=gToken(); if(!tok) return;
+  fetch("https://www.googleapis.com/calendar/v3/calendars/primary?fields=id",{headers:{Authorization:"Bearer "+tok}})
+    .then(r=>r.ok?r.json():null).then(j=>{ if(j&&j.id) try{ localStorage.setItem("money_ghint",j.id); }catch(e){} }).catch(()=>{});
+}
+// Google's calendar access lasts an hour: once the calendar was connected on this device, renew it on open without asking
+function autoReconnect(){
+  if(calState==="none"||gToken()||!navigator.onLine) return;
+  try{
+    if(!localStorage.getItem("money_ghint")||sessionStorage.getItem("money_gauto")) return;
+    sessionStorage.setItem("money_gauto","1");
+  }catch(e){ return; }
+  gConnect();
 }
 function loadShifts(){
   shLoadedFor=cur; const k=key(cur);
@@ -1273,6 +1291,7 @@ readImportHash();
 renderPayments();
 attachDb(localDb());
 initCloud();
+autoReconnect();
 })();
 </script>
 
