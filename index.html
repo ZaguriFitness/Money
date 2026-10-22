@@ -973,8 +973,8 @@ function renderProv(p){
   const payNote=`<p class="small muted pv-note">האימונים של ${MONTHS[cur-1]} ייכנסו לבנק ב${MONTHS[pm-1]}${payY!==YEAR?" "+payY:""}${p.payDay?`, בערך ב־${p.payDay}.${pm}`:""}.</p>`;
   box.innerHTML=`<div class="lg lg-prov" style="--pc:${p.color}">
     <button type="button" class="lg-h prov-toggle" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${p.name}</b><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><span class="lg-sum num">${bankNow!=null?fmt2(bankNow)+" ₪":"—"}</span></button>
-    ${cash}
     <div class="pv-body"${open?"":" hidden"}>
+    ${cash}
     ${payNote}
     ${rows}
     <div class="row"><div class="day">—<small>ידני</small></div><div class="what"><b>סכום לפי הדוח</b><div class="meta">${p.report}</div></div><input class="amt prov-in" type="number" inputmode="decimal" step="any" value="${typeof inc[fld]==="number"?inc[fld]:""}" placeholder="${c?c.total:0}" aria-label="סכום ${p.name} לפי הדוח"><span></span></div>
