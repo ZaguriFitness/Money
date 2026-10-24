@@ -879,7 +879,8 @@ function rememberCalAccount(){
 function autoReconnect(){
   if(calState==="none"||gToken()||!navigator.onLine) return;
   try{
-    if(!localStorage.getItem("money_ghint")||sessionStorage.getItem("money_gauto")) return;
+    // connected on this device before (an expired token is still stored) and not tried yet in this visit
+    if(!(localStorage.getItem("money_ghint")||localStorage.getItem(GTOK))||sessionStorage.getItem("money_gauto")) return;
     sessionStorage.setItem("money_gauto","1");
   }catch(e){ return; }
   gConnect();
@@ -1150,7 +1151,7 @@ function cloudDb(fs,uid){
 
 function applyProfile(v){
   PROFILE=Object.assign({payments:[],yearly:[],rate:0,satRate:0,prov:[],extra:null,text:{}},v||{});
-  P=PROFILE.payments||[]; YEARLY=PROFILE.yearly||[]; RATE=PROFILE.rate||0; SAT_RATE=PROFILE.satRate||0; EMS_RATE=PROFILE.emsRate||0;
+  P=PROFILE.payments||[]; YEARLY=PROFILE.yearly||[]; RATE=PROFILE.rate||0; SAT_RATE=PROFILE.satRate||0; EMS_RATE=PROFILE.emsRate||50;
   const COLORS=[["var(--car)","var(--car-bg)"],["var(--gov)","var(--gov-bg)"]];
   const COLORS2=[["var(--car)","var(--car-bg)"],["var(--mov)","var(--mov-bg)"],["var(--gov)","var(--gov-bg)"]];
   PROV=(PROFILE.prov||[]).concat(PROFILE.extra?[Object.assign({lag:2},PROFILE.extra)]:[]).map((p,i)=>Object.assign({color:COLORS2[i%3][0],bg:COLORS2[i%3][1]},p));
