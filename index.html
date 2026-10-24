@@ -557,14 +557,14 @@ const FB_SDK="https://www.gstatic.com/firebasejs/10.14.1/";
 const GOOGLE_CLIENT_ID="865787134929-4cuuvihakikksl5cp12odbinalg1cgja.apps.googleusercontent.com";
 const GTOK="money_gtoken";
 // Back from Google's sign-in page: the token arrives in the #hash
-let restoreCur=null;
+let restoreCur=null, gDenied=false;
 (()=>{
   const h=new URLSearchParams((location.hash||"").slice(1));
   if(!h.has("access_token")&&!h.has("error")) return;
   let st=null; try{ st=localStorage.getItem("money_gstate"); localStorage.removeItem("money_gstate"); restoreCur=Number(localStorage.getItem("money_cur"))||null; }catch(e){}
   if(h.get("access_token")&&st&&h.get("state")===st){
     try{ localStorage.setItem(GTOK,JSON.stringify({tok:h.get("access_token"),exp:Date.now()+Number(h.get("expires_in")||3600)*1000})); }catch(e){}
-  }
+  } else if(h.get("error")) gDenied=true;
   history.replaceState(null,"",location.pathname+location.search);
 })();
 const MONTHS=["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
@@ -827,7 +827,7 @@ function gConnect(){
     scope:"https://www.googleapis.com/auth/calendar.readonly",include_granted_scopes:"true",state:st});
   // the calendar's own account, so Google skips the account picker next time
   let hint=null; try{ hint=localStorage.getItem("money_ghint"); }catch(e){}
-  if(hint) q.set("login_hint",hint);
+  if(hint) q.set("login_hint",hint); else q.set("prompt","select_account");
   location.href="https://accounts.google.com/o/oauth2/v2/auth?"+q;
 }
 async function fetchMonth(m){
@@ -1317,6 +1317,7 @@ renderPayments();
 attachDb(localDb());
 initCloud();
 autoReconnect();
+if(gDenied) toast("החיבור ליומן לא הצליח. לוחצים שוב \"חיבור ליומן Google\" ובוחרים את החשבון של היומן.");
 })();
 </script>
 
