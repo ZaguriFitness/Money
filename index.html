@@ -149,6 +149,8 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .lg-h b{font-family:var(--f-display);font-weight:400;font-size:17px}
 .lg-sum{margin-inline-start:auto;font-family:var(--f-display);font-size:20px}
 .lg-reg .lg-sum{color:var(--accent)} .lg-cty .lg-sum{color:var(--save)}
+.lg-ems .grp-toggle{border-bottom-color:var(--ok)} .lg-ems .grp-toggle .caret,.lg-ems .lg-sum{color:var(--ok)}
+.c-ems{background:var(--ok-bg);color:var(--ok)}
 .lg-pv .lg-h{border-bottom-color:var(--car)} .lg-pv .lg-sum{color:var(--car)} .lg-pv{margin-top:14px}
 .grp-toggle{font:inherit;color:inherit;background:none;border:0;border-bottom:2px solid var(--accent);width:100%;text-align:right;cursor:pointer}
 .lg-cty .grp-toggle{border-bottom-color:var(--save)}
@@ -763,7 +765,7 @@ function renderCeiling(){
 /* ---------- checks ---------- */
 
 /* ---------- shifts from Google Calendar (read-only Calendar API, OAuth redirect) ---------- */
-let RATE=0, SAT_RATE=0; const TZ="Asia/Jerusalem";
+let RATE=0, SAT_RATE=0, EMS_RATE=0; const TZ="Asia/Jerusalem";
 const shifts={}; let shLoadedFor=null;
 const calState=GOOGLE_CLIENT_ID?"ok":"none";
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
@@ -781,7 +783,8 @@ function classifyShifts(events){
   (events||[]).forEach(e=>{
     if(!e||e.status==="cancelled") return;
     const t=(e.summary||"").trim();
-    if(t.startsWith("אימון")){
+    const isE=/(^|[^A-Za-z])EMS([^A-Za-z]|$)/i.test(t);
+    if(t.startsWith("אימון")&&!isE){
       if(e.start&&e.start.dateTime){
         const src=srcList(), hit=src.find(x=>new RegExp("[_\\s-]"+x.name+"(?![\\u0590-\\u05FF])").test(t)), tag=hit?hit.id:null;
         let name=t.replace(/^אימון[\s_\-:]*/,""); src.forEach(x=>{name=name.split(new RegExp("[_\\s-]*"+x.name,"g")).join(" ");});
@@ -790,16 +793,16 @@ function classifyShifts(events){
       }
       return;
     }
-    if(t.includes("אימון")||!t.startsWith("משמרת")) return;
-    const isC=/^משמרת[_ -]*קנטרי/.test(t);
+    if(!isE&&(t.includes("אימון")||!t.startsWith("משמרת"))) return;
+    const isC=!isE&&/^משמרת[_ -]*קנטרי/.test(t);
     if(!e.start||!e.start.dateTime||!e.end||!e.end.dateTime){
       flags.push("\""+t+"\" רשומה כאירוע של יום שלם בלי שעות, ולכן לא נספרה."); return;
     }
     const s=new Date(e.start.dateTime), en=new Date(e.end.dateTime);
-    const hrs=Math.round((en-s)/60000)/60, sat=wdFmt.format(s)==="Sat", rate=sat?SAT_RATE:RATE;
+    const hrs=Math.round((en-s)/60000)/60, sat=!isE&&wdFmt.format(s)==="Sat", rate=isE?EMS_RATE:sat?SAT_RATE:RATE;
     // "+30" in the title is an extra amount for that shift; "+ name" without a number adds nothing
     const bonus=[...t.matchAll(/\+\s*(\d+(?:\.\d+)?)/g)].reduce((a,m)=>a+Number(m[1]),0);
-    const sh={t,s,en,hrs,sat,isC,rate,bonus,pay:Math.round((hrs*rate+bonus)*100)/100,fl:[]};
+    const sh={t,s,en,hrs,sat,isC,isE,rate,bonus,pay:Math.round((hrs*rate+bonus)*100)/100,fl:[]};
     if(isC && !t.startsWith("משמרת_קנטרי")) sh.fl.push("השם לא כתוב \"משמרת_קנטרי\". נספרה כקנטרי.");
     if(hrs>12) sh.fl.push("יותר מ־12 שעות. לוודא שהשעות נכונות.");
     if(e.start.timeZone && e.start.timeZone!==TZ) sh.fl.push("שמורה באזור זמן "+e.start.timeZone+". חושב לפי שעון ישראל.");
@@ -1038,16 +1041,17 @@ function renderIncome(){
   const body=$("incBody"), st=$("incStatus");
   const inc=getM(cur).income||{}, biz=typeof inc.biz==="number"?inc.biz:0, manual=false;
   const s=shifts[key(cur)], ok=s&&s.ok;
-  const reg=ok?s.list.filter(x=>!x.isC):[], cty=ok?s.list.filter(x=>x.isC):[];
-  const pay=l=>Math.round(l.reduce((a,x)=>a+x.pay,0)*100)/100, rp=pay(reg), cp=pay(cty);
+  const reg=ok?s.list.filter(x=>!x.isC&&!x.isE):[], cty=ok?s.list.filter(x=>x.isC):[], ems=ok?s.list.filter(x=>x.isE):[];
+  const pay=l=>Math.round(l.reduce((a,x)=>a+x.pay,0)*100)/100, rp=pay(reg), cp=pay(cty), ep=pay(ems);
   // split bar + legend (same look as expenses)
-  const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות HIIT",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"]];
+  const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות HIIT",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"],["EMS",ep,"var(--ok)"]];
   PROV.forEach(p=>parts.push([p.name,provDueFor(p,cur)||0,p.color]));
   parts.push(["עסק",biz,"var(--gov)"]);
   const tot=parts.reduce((a,p)=>a+p[1],0);
   $("inSplit").innerHTML=tot>0?parts.filter(p=>p[1]>0).map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}"></span>`).join(""):"";
   $("inLegend").innerHTML=parts.map(p=>`<span><i style="background:${p[2]}"></i>${p[0]}: <b class="num">${fmt(p[1])} ₪</b></span>`).join("");
-  $("incSub").textContent=ok&&s.list.length?`${s.list.length} משמרות · ${fmt2(s.hours)} שעות · ${RATE} ₪ לשעה, בשבת ${SAT_RATE} ₪`:"";
+  const nE=reg.length+cty.length, hE=reg.concat(cty).reduce((a,x)=>a+x.hrs,0);
+  $("incSub").textContent=ok&&s.list.length?`${nE} משמרות · ${fmt2(hE)} שעות · ${RATE} ₪ לשעה, בשבת ${SAT_RATE} ₪${ems.length?` · EMS ${EMS_RATE} ₪ לשעה`:""}`:"";
   $("incRefresh").textContent=gToken()?"רענון מהיומן":"חיבור ליומן Google";
   $("incRefresh").hidden=calState==="none";
   if(calState==="none"){ st.textContent="היומן לא מחובר"; body.innerHTML=`<p class="muted small">החיבור ליומן Google עוד לא הוגדר באפליקציה.</p>`; return; }
@@ -1061,9 +1065,9 @@ function renderIncome(){
   st.textContent="עודכן מהיומן ב־"+s.at+(s.stale?" · לא התעדכן עכשיו":"")+(s.needAuth?" · לעדכון לוחצים על הכפתור":"");
   const now=new Date();
   const rowOf=x=>{
-    const fut=x.s>now, type=x.isC?"קנטרי":"רגילה";
+    const fut=x.s>now, type=x.isE?"EMS":x.isC?"קנטרי":"HIIT";
     return `<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div>
-      <div class="what"><b>משמרת</b><span class="chip ${x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}
+      <div class="what"><b>${x.isE?"עבודה":"משמרת"}</b><span class="chip ${x.isE?"c-ems":x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}
         <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}</div>
         ${x.fl.map(f=>`<div class="meta" style="color:var(--warn)">${esc(f)}</div>`).join("")}</div>
       <span class="amt amt-ro num">${fmt2(x.pay)}</span>
@@ -1075,7 +1079,7 @@ function renderIncome(){
     const open=!!grpOpen[cls];
     return `<div class="lg ${cls}"><button type="button" class="lg-h grp-toggle" data-g="${cls}" aria-expanded="${open}"><span class="caret" aria-hidden="true">${open?"▾":"‹"}</span><b>${title}</b><span class="small muted">${list.length===1?"משמרת אחת":list.length+" משמרות"} · ${fmt2(h)} שעות</span><span class="lg-sum num">${fmt2(sum)} ₪</span></button><div class="grp-body"${open?"":" hidden"}>${list.map(rowOf).join("")}</div></div>`;
   };
-  const rows=grp("משמרות HIIT",reg,rp,"lg-reg")+grp("משמרות קנטרי",cty,cp,"lg-cty");
+  const rows=grp("משמרות HIIT",reg,rp,"lg-reg")+grp("משמרות קנטרי",cty,cp,"lg-cty")+grp("EMS",ems,ep,"lg-ems");
   const notes=s.flags.map(f=>`<div class="sh-notice" style="background:var(--warn-bg);color:var(--warn)">${esc(f)}</div>`).join("");
   body.innerHTML=(rows||`<p class="muted small">אין משמרות ביומן בחודש הזה.</p>`)+notes
     +(manual&&rows?`<p class="small muted">בחודש הזה רשמת משכורת בפועל, אז היא נספרת בסיכום במקום המשמרות.</p>`:"");
@@ -1146,7 +1150,7 @@ function cloudDb(fs,uid){
 
 function applyProfile(v){
   PROFILE=Object.assign({payments:[],yearly:[],rate:0,satRate:0,prov:[],extra:null,text:{}},v||{});
-  P=PROFILE.payments||[]; YEARLY=PROFILE.yearly||[]; RATE=PROFILE.rate||0; SAT_RATE=PROFILE.satRate||0;
+  P=PROFILE.payments||[]; YEARLY=PROFILE.yearly||[]; RATE=PROFILE.rate||0; SAT_RATE=PROFILE.satRate||0; EMS_RATE=PROFILE.emsRate||0;
   const COLORS=[["var(--car)","var(--car-bg)"],["var(--gov)","var(--gov-bg)"]];
   const COLORS2=[["var(--car)","var(--car-bg)"],["var(--mov)","var(--mov-bg)"],["var(--gov)","var(--gov-bg)"]];
   PROV=(PROFILE.prov||[]).concat(PROFILE.extra?[Object.assign({lag:2},PROFILE.extra)]:[]).map((p,i)=>Object.assign({color:COLORS2[i%3][0],bg:COLORS2[i%3][1]},p));
@@ -1190,7 +1194,8 @@ function readPatchHash(){
   try{
     const b=atob(h.slice(7).replace(/-/g,"+").replace(/_/g,"/"));
     const v=JSON.parse(new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))));
-    if(!v||typeof v.months!=="object") throw 0;
+    if(!v||(typeof v.months!=="object"&&typeof v.profile!=="object")) throw 0;
+    v.months=v.months||{};
     localStorage.setItem(PATCHK,JSON.stringify(v));
   }catch(e){ toast("קישור העדכון לא תקין"); }
 }
@@ -1199,6 +1204,7 @@ function applyPatch(){
   let v=null; try{ v=JSON.parse(localStorage.getItem(PATCHK)||"null"); }catch(e){}
   if(!v) return;
   try{ localStorage.removeItem(PATCHK); }catch(e){}
+  if(v.profile&&typeof v.profile==="object") db.doc("settings/profile").set(v.profile,{merge:true}).catch(()=>{});
   Object.entries(v.months).forEach(([kk,patch])=>{
     const md=JSON.parse(JSON.stringify(data[kk]||{items:{},income:{}}));
     ["income","items"].forEach(f=>{ if(patch[f]) md[f]=Object.assign(md[f]||{},patch[f]); });
