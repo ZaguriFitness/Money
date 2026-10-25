@@ -161,8 +161,9 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .pv-note{padding:8px 2px 2px;margin:0}
 .cash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 2px}
 .cash>div{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:8px;padding:8px 10px;min-width:0}
-.cash b{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--pc)}
-@media (max-width:480px){.cash{gap:6px}.cash>div{padding:8px}.cash b{font-size:17px}.cash .small{font-size:12px}}
+.cash b,.cash-edit{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--pc)}
+.cash-edit{background:none;border:0;padding:0;text-align:right;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px}
+@media (max-width:480px){.cash{gap:6px}.cash>div{padding:8px}.cash b,.cash-edit{font-size:17px}.cash .small{font-size:12px}}
 .prov-toggle{font:inherit;color:inherit;background:none;border:0;border-bottom:2px solid var(--pc);width:100%;text-align:right;cursor:pointer}
 .prov-toggle .caret{color:var(--pc);font-size:14px;width:12px}
 .lg-prov .lg-sum{color:var(--pc)}
@@ -987,8 +988,8 @@ function renderProv(p){
   const nextPay=ymShift(cur,1)[1], due=provDueFor(p,cur);
   const [zy,zm]=ymShift(cur,p.lag);
   const cash=`<div class="cash">
-    <div><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><b class="num">${bankNow!=null?fmt2(bankNow)+" ₪":"עוד לא ידוע"}</b><span class="small muted">על האימונים של ${MONTHS[nm-1]}${ny!==YEAR?" "+ny:""}</span></div>
-    <div><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}</span><b class="num">${fmt2(due||0)} ₪</b><span class="small muted">על האימונים של ${MONTHS[xm-1]}${xy!==YEAR?" "+xy:""}</span></div>
+    <div><span class="small muted">נכנס לבנק ב${MONTHS[cur-1]}</span><button type="button" class="cash-edit num" data-m="${cur}" aria-label="לשנות כמה נכנס ב${MONTHS[cur-1]}">${bankNow!=null?fmt2(bankNow)+" ₪":"עוד לא ידוע"} ✎</button><span class="small muted">על האימונים של ${MONTHS[nm-1]}${ny!==YEAR?" "+ny:""}</span></div>
+    <div><span class="small muted">ייכנס ב${MONTHS[nextPay-1]}</span>${cur<12?`<button type="button" class="cash-edit num" data-m="${cur+1}" aria-label="לשנות כמה ייכנס ב${MONTHS[nextPay-1]}">${fmt2(due||0)} ₪ ✎</button>`:`<b class="num">${fmt2(due||0)} ₪</b>`}<span class="small muted">על האימונים של ${MONTHS[xm-1]}${xy!==YEAR?" "+xy:""}</span></div>
     <div><span class="small muted">ייכנס ב${MONTHS[zm-1]}${zy!==YEAR?" "+zy:""}</span><b class="num">${pe?fmt2(pe.val)+" ₪":"0 ₪"}</b><span class="small muted">על האימונים של ${MONTHS[cur-1]}${pe&&pe.src==="calendar"?" · לפי היומן":""}</span></div>
   </div>`;
   const payNote=`<p class="small muted pv-note">האימונים של ${MONTHS[cur-1]} ייכנסו לבנק ב${MONTHS[pm-1]}${payY!==YEAR?" "+payY:""}${p.payDay?`, בערך ב־${p.payDay}.${pm}`:""}.</p>`;
@@ -1003,6 +1004,13 @@ function renderProv(p){
     </div>
   </div>`;
   box.querySelector(".prov-toggle").addEventListener("click",()=>{provOpen[p.id]=!provOpen[p.id]; renderProv(p);});
+  box.querySelectorAll(".cash-edit").forEach(b=>b.addEventListener("click",()=>{
+    const m=Number(b.dataset.m), old=(getM(m).income||{})[p.id];
+    const v=prompt(`כמה ${m===cur?"נכנס":"ייכנס"} לבנק מ${p.name} ב${MONTHS[m-1]}? (ריק = לפי היומן)`, typeof old==="number"?String(old):"");
+    if(v===null) return;
+    const t=v.trim(); if(t!==""&&isNaN(Number(t))) return;
+    setIncome(m,p.id,t===""?null:Number(t));
+  }));
   box.querySelector(".prov-in").addEventListener("change",e=>{const v=e.target.value.trim(); setIncome(cur,fld,v===""?null:Number(v));});
   box.querySelectorAll(".pchip").forEach(b=>b.addEventListener("click",()=>{
     const n=b.dataset.n, cur_=provNames[p.id]; const next=cur_.includes(n)?cur_.filter(x=>x!==n):cur_.concat([n]);
@@ -1181,7 +1189,7 @@ function attachDb(d){
   },()=>{}));
   unsubs.push(d.collection("months").onSnapshot(snap=>{
     const next={}; snap.docs.forEach(doc=>{next[doc.id]=doc.data();});
-    data=next; loaded=true; renderAll(); applyPatch();
+    data=next; loaded=true; renderAll(); if(!(snap.metadata&&snap.metadata.fromCache)) applyPatch();
   },()=>{ saveMsg("לא הצלחתי לקרוא את הנתונים מהענן. בדוק חיבור לאינטרנט."); }));
 }
 
@@ -1200,18 +1208,28 @@ function readPatchHash(){
     localStorage.setItem(PATCHK,JSON.stringify(v));
   }catch(e){ toast("קישור העדכון לא תקין"); }
 }
+const ONE_OFF={"2026-10":{mov:0},"2026-11":{mov:600}};
+// field-level merges into the cloud, so nothing else in the month is ever replaced
+function mergeMonth(kk,patch){ return db.collection("months").doc(kk).set(patch,{merge:true}); }
+function applyOneOff(){
+  Object.entries(ONE_OFF).forEach(([kk,inc])=>{
+    const have=(data[kk]||{}).income||{}, add={};
+    Object.keys(inc).forEach(f=>{ if(have[f]===undefined) add[f]=inc[f]; });
+    if(Object.keys(add).length) mergeMonth(kk,{income:add}).catch(()=>{});
+  });
+}
 function applyPatch(){
   if(!db||db.kind!=="cloud"||!loaded) return;
+  applyOneOff();
   let v=null; try{ v=JSON.parse(localStorage.getItem(PATCHK)||"null"); }catch(e){}
   if(!v) return;
   try{ localStorage.removeItem(PATCHK); }catch(e){}
   if(v.profile&&typeof v.profile==="object") db.doc("settings/profile").set(v.profile,{merge:true}).catch(()=>{});
   Object.entries(v.months).forEach(([kk,patch])=>{
-    const md=JSON.parse(JSON.stringify(data[kk]||{items:{},income:{}}));
-    ["income","items"].forEach(f=>{ if(patch[f]) md[f]=Object.assign(md[f]||{},patch[f]); });
-    data[kk]=md; write(kk,md);
+    const p={}; ["income","items"].forEach(f=>{ if(patch[f]) p[f]=patch[f]; });
+    mergeMonth(kk,p).catch(()=>{});
   });
-  renderAll(); toast("העדכון נשמר");
+  toast("העדכון נשמר");
 }
 function readImportHash(){
   const h=location.hash||"";
