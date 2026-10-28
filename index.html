@@ -112,6 +112,7 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .day small{display:block;font-family:var(--f-body);font-size:10px;color:var(--muted);line-height:1;margin-top:-6px}
 .what{min-width:0}
 .what b{font-weight:600}
+.when-d{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .what .meta{font-size:13px;color:var(--muted)}
 .chip{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;margin-inline-start:6px;vertical-align:2px}
 .c-home{background:var(--accent-soft);color:var(--accent)}
@@ -639,7 +640,7 @@ function renderMonth(){
   rows.forEach(r=>{
     const el=document.createElement("div"); el.className="row";
     el.innerHTML=`<div class="day">${r.p.day??"—"}<small>${r.p.day?"לחודש":"משתנה"}</small></div>
-      <div class="what"><b>${r.p.name}</b><span class="chip ${CAT[r.p.cat].cls}">${CAT[r.p.cat].name}</span><div class="meta">${r.p.covers}</div>
+      <div class="what"><b>${r.p.name}</b>${r.p.day?` <span class="when-d">(${r.p.day}${r.p.dayTo?"–"+r.p.dayTo:""}.${cur})</span>`:""}<span class="chip ${CAT[r.p.cat].cls}">${CAT[r.p.cat].name}</span><div class="meta">${r.p.covers}</div>
         ${r.log&&r.log.length?`<div class="meta loglist">${r.log.map((x,i)=>`<span class="logitem"><span class="num${x.a<0?" neg":""}">${x.a<0?"−":""}${fmtExact(Math.abs(x.a))} ₪${x.d?` ב־${Number(x.d.slice(8,10))}.${Number(x.d.slice(5,7))}`:""}</span><button type="button" class="logdel" data-i="${i}" aria-label="להסיר ${fmtExact(x.a)} ₪">×</button></span>`).join('<span class="logplus">+</span>')}</div>`:""}
         <form class="addform" hidden><input class="addin" type="number" inputmode="decimal" step="any" placeholder="כמה להוסיף?" aria-label="סכום להוספה ל${r.p.name}"><input class="adddate" type="date" aria-label="תאריך"><button type="submit" class="addok">הוספה</button><button type="button" class="addno">ביטול</button></form></div>
       <div class="amtwrap"><input class="amt${r.est?" est":""}" id="amt-${r.p.k}" type="number" inputmode="decimal" value="${r.est?"":r.a}" placeholder="~${r.p.typ}" aria-label="סכום ${r.p.name}"><button class="plus" type="button" data-mode="add" aria-label="להוסיף סכום ל${r.p.name}" title="להוסיף סכום">+</button><button class="plus minus" type="button" data-mode="sub" aria-label="להוריד סכום מ${r.p.name}" title="להוריד סכום">−</button></div>
@@ -695,7 +696,7 @@ function renderPayments(){
     wrap.innerHTML=`<div class="group-h"><h2>${title}</h2><span class="small muted">${sub}</span></div><div class="cards"></div>`;
     const cards=wrap.querySelector(".cards");
     items.forEach(p=>{cards.insertAdjacentHTML("beforeend",`<article class="card"><div class="top"><h3>${p.name}</h3><span class="big">~${fmt(p.typ)} ₪</span></div>
-      <dl class="facts"><dt>מתי</dt><dd>${p.day?"ב־"+p.day+" לחודש":"אין תאריך קבוע"}</dd><dt>כל כמה</dt><dd>${p.freq}</dd><dt>על מה</dt><dd>${p.covers}</dd>${p.actual?`<dt>בפועל</dt><dd>${p.actual}</dd>`:""}</dl>${p.tip?`<p class="tip">${p.tip}</p>`:""}</article>`);});
+      <dl class="facts"><dt>מתי</dt><dd>${p.day?"ב־"+p.day+(p.dayTo?"–"+p.dayTo:"")+" לחודש":"אין תאריך קבוע"}</dd><dt>כל כמה</dt><dd>${p.freq}</dd><dt>על מה</dt><dd>${p.covers}</dd>${p.actual?`<dt>בפועל</dt><dd>${p.actual}</dd>`:""}</dl>${p.tip?`<p class="tip">${p.tip}</p>`:""}</article>`);});
     yr.forEach(y=>{cards.insertAdjacentHTML("beforeend",`<article class="card"><div class="top"><h3>${y.name}</h3><span class="big">${fmt(y.amt/12)} ₪</span></div>
       <dl class="facts"><dt>כל כמה</dt><dd>כל חודש</dd><dt>בפועל</dt><dd>${fmt(y.amt)} ₪, ${y.when}</dd></dl><p class="tip">${y.tip}</p></article>`);});
     G.appendChild(wrap);
