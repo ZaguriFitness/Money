@@ -339,9 +339,9 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
         <div class="ledger" id="incBody"><p class="muted small">המשמרות נטענות מהיומן…</p></div>
         <div id="provBoxes"></div>
         <div class="ledger inc-static">
-          <div class="row"><div class="day">—<small>ידני</small></div>
-            <div class="what"><b>עסק (עוסק פטור)</b><span class="chip c-gov">עסק</span><div class="meta">המחזור של החודש. נספר גם לתקרת עוסק פטור.</div></div>
-            <input class="amt" id="inBiz" type="number" inputmode="decimal" step="any" placeholder="0" aria-label="הכנסה מהעסק החודש"><span></span></div>
+          <div class="row"><div class="day">+<small>ידני</small></div>
+            <div class="what"><b>סכום נוסף</b><div class="meta">כל סכום שתרצה להוסיף להכנסות של החודש. נשמר ולא תלוי ביומן.</div></div>
+            <input class="amt" id="inExtra" type="number" inputmode="decimal" step="any" placeholder="0" aria-label="סכום נוסף להכנסות החודש"><span></span></div>
         </div>
         <div class="sh-head"><span class="status" id="incStatus" role="status" style="flex:1">טוען מהיומן…</span><button class="refresh" id="incRefresh">רענון מהיומן</button></div>
       </div>
@@ -618,13 +618,14 @@ function renderMonth(){
   const shS=shifts[key(cur)], shTot=shS&&shS.ok?shS.total:null, manual=false;
   const sal=manual?inc.hiit:shTot;
   const pv=provTotal(cur);
-  const hasInc=sal!=null||typeof inc.biz==="number"||provAny(cur);
-  const totIn=(sal||0)+(inc.biz||0)+pv;
+  const more=(inc.extra||0)+(inc.biz||0);
+  const hasInc=sal!=null||typeof inc.extra==="number"||typeof inc.biz==="number"||provAny(cur);
+  const totIn=(sal||0)+more+pv;
   $("kOut").textContent=fmt(out)+" ₪";
   const paid=rows.filter(r=>r.s==="paid").length;
   $("kOutSub").textContent=paid+" מתוך "+rows.length+" שולמו";
   $("kIn").textContent=hasInc? fmt(totIn)+" ₪" : "לא רשום";
-  $("kInSub").textContent=hasInc? (manual?"משכורת "+fmt(inc.hiit):"משמרות "+fmt(shTot||0))+(pv?" · "+PROV.map(p=>p.name).join("/")+" "+fmt(pv):"")+" · עסק "+fmt(inc.biz||0) : (shS&&shS.loading?"טוען משמרות מהיומן…":"אפשר למלא למטה");
+  $("kInSub").textContent=hasInc? (manual?"משכורת "+fmt(inc.hiit):"משמרות "+fmt(shTot||0))+(pv?" · "+PROV.map(p=>p.name).join("/")+" "+fmt(pv):"")+(more?" · נוסף "+fmt(more):"") : (shS&&shS.loading?"טוען משמרות מהיומן…":"אפשר למלא למטה");
   renderIncome();
   const net=totIn-out;
   $("kLeft").textContent=hasInc? (net<0?"−":"")+fmt(Math.abs(net))+" ₪" : "—";
@@ -677,11 +678,11 @@ function renderMonth(){
       setItem(cur,r.p.k,{a:sum,log});
     });
   });
-  $("inBiz").value=typeof inc.biz==="number"?inc.biz:"";
+  $("inExtra").value=typeof inc.extra==="number"?inc.extra:"";
 }
 $("prevM").addEventListener("click",()=>{if(cur>1){cur--;renderAll();}});
 $("nextM").addEventListener("click",()=>{if(cur<12){cur++;renderAll();}});
-$("inBiz").addEventListener("change",e=>{const v=e.target.value.trim(); setIncome(cur,"biz",v===""?null:Number(v));});
+$("inExtra").addEventListener("change",e=>{const v=e.target.value.trim(); setIncome(cur,"extra",v===""?null:Number(v));});
 
 /* ---------- payments cards ---------- */
 function renderPayments(){
@@ -1049,14 +1050,14 @@ const dShort=new Intl.DateTimeFormat("he-IL",{timeZone:TZ,weekday:"short"});
 function renderIncome(){
   renderProvs();
   const body=$("incBody"), st=$("incStatus");
-  const inc=getM(cur).income||{}, biz=typeof inc.biz==="number"?inc.biz:0, manual=false;
+  const inc=getM(cur).income||{}, biz=(inc.extra||0)+(inc.biz||0), manual=false;
   const s=shifts[key(cur)], ok=s&&s.ok;
   const reg=ok?s.list.filter(x=>!x.isC&&!x.isE):[], cty=ok?s.list.filter(x=>x.isC):[], ems=ok?s.list.filter(x=>x.isE):[];
   const pay=l=>Math.round(l.reduce((a,x)=>a+x.pay,0)*100)/100, rp=pay(reg), cp=pay(cty), ep=pay(ems);
   // split bar + legend (same look as expenses)
   const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות HIIT",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"],["EMS",ep,"var(--ok)"]];
   PROV.forEach(p=>parts.push([p.name,provDueFor(p,cur)||0,p.color]));
-  parts.push(["עסק",biz,"var(--gov)"]);
+  parts.push(["נוסף",biz,"var(--gov)"]);
   const tot=parts.reduce((a,p)=>a+p[1],0);
   $("inSplit").innerHTML=tot>0?parts.filter(p=>p[1]>0).map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}"></span>`).join(""):"";
   $("inLegend").innerHTML=parts.map(p=>`<span><i style="background:${p[2]}"></i>${p[0]}: <b class="num">${fmt(p[1])} ₪</b></span>`).join("");
