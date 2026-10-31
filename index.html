@@ -1130,7 +1130,7 @@ const grpOpen={};
 /* ---------- monthly hours sheet for the employer (.xlsx, shared from the phone) ---------- */
 let xlGroups={}, xlsxReady=null;
 // loaded ahead of the tap, so the share sheet can open straight from it
-function loadXlsx(){ if(!xlsxReady) xlsxReady=window.XLSX?Promise.resolve():loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js").catch(()=>{xlsxReady=null;}); return xlsxReady; }
+function loadXlsx(){ if(!xlsxReady) xlsxReady=window.XLSX?Promise.resolve():loadScript("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js").catch(()=>{xlsxReady=null;}); return xlsxReady; }
 const dmy=new Intl.DateTimeFormat("he-IL",{timeZone:TZ,day:"numeric",month:"numeric",year:"numeric"});
 function exportXlsx(g){
   const [title,list]=xlGroups[g]||[]; if(!list||!list.length) return;
@@ -1140,16 +1140,29 @@ function exportXlsx(g){
   const ocMin=x=>x.oc?10*60000:0, hrsOf=x=>x.hrs+(x.oc?1/3:0);
   const hasSt=list.some(x=>x.streak), hasB=list.some(x=>x.bonus);
   const head=["תאריך","יום","שעות","מספר שעות","תעריף לשעה","חישוב","סכום שעות"].concat(hasSt?["שבת ברצף"]:[],hasB?["תוספת עמלה"]:[],["סה״כ למשמרת"]);
-  const rows=list.map(x=>[dmy.format(x.s),dayName.format(x.s),tFmt.format(new Date(x.s-ocMin(x)))+"–"+tFmt.format(new Date(+x.en+ocMin(x))),r2(hrsOf(x)),x.rate,`${fmt2(hrsOf(x))} × ${x.rate}`,r2(hrsOf(x)*x.rate)]
+  const rows=list.map(x=>[dmy.format(x.s),dayName.format(x.s),tFmt.format(new Date(x.s-ocMin(x)))+"–"+tFmt.format(new Date(+x.en+ocMin(x))),r2(hrsOf(x)),x.rate,`\u200E${fmt2(hrsOf(x))} × ${x.rate}\u200E`,r2(hrsOf(x)*x.rate)]
     .concat(hasSt?[x.streak||0]:[],hasB?[x.bonus||0]:[],[r2(x.pay)]));
   const tot=["סה״כ","","",r2(list.reduce((a,x)=>a+hrsOf(x),0)),"","",r2(list.reduce((a,x)=>a+hrsOf(x)*x.rate,0))]
     .concat(hasSt?[list.reduce((a,x)=>a+(x.streak||0),0)]:[],hasB?[list.reduce((a,x)=>a+(x.bonus||0),0)]:[],[r2(list.reduce((a,x)=>a+x.pay,0))]);
   // columns run from the right in every viewer: written right-to-left, sheet left in normal direction
   const flip=r=>{ const w=head.length, row=r.slice(); while(row.length<w) row.push(""); return row.reverse(); };
-  const titleRow=Array(head.length-1).fill("").concat([`${title} · ${MONTHS[cur-1]} ${YEAR}`]);
+  const titleRow=[`${title} · ${MONTHS[cur-1]} ${YEAR}`].concat(Array(head.length-1).fill(""));
   const aoa=[titleRow,[],flip(head)].concat(rows.map(flip),[[],flip(tot)]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"]=head.map((h,i)=>({wch:i===1?12:i===2?13:Math.max(10,h.length+2)})).reverse();
+  ws["!cols"]=head.map((h,i)=>({wch:i===1?12:i===2?14:Math.max(11,h.length+4)})).reverse();
+  ws["!pageSetup"]={orientation:"landscape",fitToWidth:1,fitToHeight:0};
+  // Hebrew reads from the right: every cell aligned right, title across the whole table, header and total in bold
+  const W=head.length, last=aoa.length-1, line={style:"thin",color:{rgb:"BFC8C4"}};
+  ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:W-1}}];
+  for(let r=0;r<aoa.length;r++) for(let c=0;c<W;c++){
+    const ref=XLSX.utils.encode_cell({r,c}); if(!ws[ref]) ws[ref]={t:"s",v:""};
+    const table=r>=2&&aoa[r].length>0;
+    const he=typeof ws[ref].v==="string"&&/[\u0590-\u05FF]/.test(ws[ref].v);
+    ws[ref].s={alignment:{horizontal:"right",vertical:"center",readingOrder:he?2:1},
+      font:{name:"Arial",sz:r===0?14:11,bold:r===0||r===2||r===last},
+      border:table?{top:line,bottom:line,left:line,right:line}:undefined,
+      fill:r===2?{fgColor:{rgb:"E0EEE9"}}:r===last?{fgColor:{rgb:"F1F4F2"}}:undefined};
+  }
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,MONTHS[cur-1]);
   // plain Latin file name: some browsers drop a Hebrew one and save "download"
