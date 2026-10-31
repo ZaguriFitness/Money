@@ -1136,16 +1136,21 @@ function exportXlsx(g){
   const [title,list]=xlGroups[g]||[]; if(!list||!list.length) return;
   if(!window.XLSX){ toast("מכין את הקובץ… לחץ שוב בעוד רגע"); loadXlsx(); return; }
   const r2=n=>Math.round(n*100)/100;
-  const hasOc=list.some(x=>x.oc), hasSt=list.some(x=>x.streak), hasB=list.some(x=>x.bonus);
-  const head=["תאריך","יום","שעות","מספר שעות","תעריף לשעה","חישוב","סכום שעות"].concat(hasOc?["פתיחה וסגירה (20 דק׳)"]:[],hasSt?["שבת ברצף"]:[],hasB?["תוספת"]:[],["סה״כ למשמרת"]);
-  const rows=list.map(x=>[dmy.format(x.s),dayName.format(x.s),tFmt.format(x.s)+"–"+tFmt.format(x.en),r2(x.hrs),x.rate,`${fmt2(x.hrs)} × ${x.rate}`,r2(x.hrs*x.rate)]
-    .concat(hasOc?[x.oc||0]:[],hasSt?[x.streak||0]:[],hasB?[x.bonus||0]:[],[r2(x.pay)]));
-  const tot=["סה״כ","","",r2(list.reduce((a,x)=>a+x.hrs,0)),"","",r2(list.reduce((a,x)=>a+x.hrs*x.rate,0))]
-    .concat(hasOc?[r2(list.reduce((a,x)=>a+(x.oc||0),0))]:[],hasSt?[list.reduce((a,x)=>a+(x.streak||0),0)]:[],hasB?[list.reduce((a,x)=>a+(x.bonus||0),0)]:[],[r2(list.reduce((a,x)=>a+x.pay,0))]);
-  const aoa=[[`${title} · ${MONTHS[cur-1]} ${YEAR}`],[],head].concat(rows,[[],tot]);
+  // opening and closing are part of the hours: 10 minutes before and 10 after, as the contract counts them
+  const ocMin=x=>x.oc?10*60000:0, hrsOf=x=>x.hrs+(x.oc?1/3:0);
+  const hasSt=list.some(x=>x.streak), hasB=list.some(x=>x.bonus);
+  const head=["תאריך","יום","שעות","מספר שעות","תעריף לשעה","חישוב","סכום שעות"].concat(hasSt?["שבת ברצף"]:[],hasB?["תוספת עמלה"]:[],["סה״כ למשמרת"]);
+  const rows=list.map(x=>[dmy.format(x.s),dayName.format(x.s),tFmt.format(new Date(x.s-ocMin(x)))+"–"+tFmt.format(new Date(+x.en+ocMin(x))),r2(hrsOf(x)),x.rate,`${fmt2(hrsOf(x))} × ${x.rate}`,r2(hrsOf(x)*x.rate)]
+    .concat(hasSt?[x.streak||0]:[],hasB?[x.bonus||0]:[],[r2(x.pay)]));
+  const tot=["סה״כ","","",r2(list.reduce((a,x)=>a+hrsOf(x),0)),"","",r2(list.reduce((a,x)=>a+hrsOf(x)*x.rate,0))]
+    .concat(hasSt?[list.reduce((a,x)=>a+(x.streak||0),0)]:[],hasB?[list.reduce((a,x)=>a+(x.bonus||0),0)]:[],[r2(list.reduce((a,x)=>a+x.pay,0))]);
+  // columns run from the right in every viewer: written right-to-left, sheet left in normal direction
+  const flip=r=>{ const w=head.length, row=r.slice(); while(row.length<w) row.push(""); return row.reverse(); };
+  const titleRow=Array(head.length-1).fill("").concat([`${title} · ${MONTHS[cur-1]} ${YEAR}`]);
+  const aoa=[titleRow,[],flip(head)].concat(rows.map(flip),[[],flip(tot)]);
   const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"]=head.map((h,i)=>({wch:i===1?12:i===2?13:Math.max(10,h.length+2)}));
-  const wb=XLSX.utils.book_new(); wb.Workbook={Views:[{RTL:true}]};
+  ws["!cols"]=head.map((h,i)=>({wch:i===1?12:i===2?13:Math.max(10,h.length+2)})).reverse();
+  const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,MONTHS[cur-1]);
   // plain Latin file name: some browsers drop a Hebrew one and save "download"
   const name=`${{"lg-reg":"HIIT","lg-cty":"Country","lg-ems":"EMS"}[g]}-${YEAR}-${String(cur).padStart(2,"0")}.xlsx`;
