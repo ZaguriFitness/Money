@@ -142,6 +142,10 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .addform button{font:inherit;font-size:14px;border-radius:999px;padding:6px 12px;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .addform .addok{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
 .amt-ro{display:inline-block;text-align:left;padding:4px 6px}
+.inc-row{grid-template-columns:40px minmax(0,1fr) auto}
+.inc-amt{font-weight:600;font-size:17px}
+.nw{white-space:nowrap}
+.c-done{background:var(--ok-bg);color:var(--ok)}
 .inc-static{border-top:1px solid var(--line);margin-top:4px}
 #incBody{gap:14px}
 .lg{border-radius:10px;padding:4px 10px 2px;border:1px solid var(--line)}
@@ -995,7 +999,7 @@ function renderProv(p){
   if(pe&&pe.src==="report"){
     rows=`<div class="row"><div class="day">✓<small>דוח</small></div><div class="what"><b>לפי הדוח מ${p.name}</b><span class="chip" style="background:${p.bg};color:${p.color}">סופי</span><div class="meta">${paidKey?`נכנס לבנק ב־${Number(paidKey.slice(8,10))}.${Number(paidKey.slice(5,7))}`:`ייכנס ${when}`}</div></div><span class="amt amt-ro num">${fmt2(pe.val)}</span><span></span></div>`;
   } else if(c&&c.list.length){
-    rows=c.list.map(x=>`<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div><div class="what"><b>אימון</b><span class="chip" style="background:${p.bg};color:${p.color}">${esc(x.name)}</span><div class="meta"><span dir="ltr">${tFmt.format(x.s)}</span> · ${p.rate} ₪ לאימון</div></div><span class="amt amt-ro num">${p.rate}</span><span class="pill ${x.s>new Date()?"s-none":"s-paid"}" style="cursor:default">${x.s>new Date()?"מתוכנן":"בוצע"}</span></div>`).join("");
+    rows=c.list.map(x=>`<div class="row inc-row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div><div class="what"><b>אימון</b><span class="chip" style="background:${p.bg};color:${p.color}">${esc(x.name)}</span><span class="chip ${x.s>new Date()?"c-fut":"c-done"}">${x.s>new Date()?"מתוכנן":"בוצע"}</span><div class="meta"><span class="nw" dir="ltr">${tFmt.format(x.s)}</span> · <span class="nw">${p.rate} ₪ לאימון</span></div></div><span class="amt-ro num inc-amt">${p.rate}</span></div>`).join("");
   } else {
     rows=`<p class="muted small" style="padding:8px 2px">${!s||s.loading?"האימונים נטענים מהיומן…":`אין עדיין אימוני ${p.name} מסומנים בחודש הזה. סמן למטה אילו מתאמנים מגיעים דרך ${p.name}.`}</p>`;
   }
@@ -1097,12 +1101,13 @@ function renderIncome(){
   const now=new Date();
   const rowOf=x=>{
     const fut=x.s>now, type=x.isE?"EMS":x.isC?"קנטרי":"HIIT";
-    return `<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div>
-      <div class="what"><b>${x.isE?"עבודה":"משמרת"}</b><span class="chip ${x.isE?"c-ems":x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}
-        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}${x.oc?` + ${fmt2(x.oc)} ₪ פתיחה וסגירה`:""}${x.streak?` + ${fmt2(x.streak)} ₪ שבת ברצף`:""}</div>
+    const extras=[x.bonus?`+ ${fmt2(x.bonus)} ₪ תוספת`:"",x.oc?`+ ${fmt2(x.oc)} ₪ פתיחה וסגירה`:"",x.streak?`+ ${fmt2(x.streak)} ₪ שבת ברצף`:""].filter(Boolean);
+    return `<div class="row inc-row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div>
+      <div class="what"><b>${x.isE?"עבודה":"משמרת"}</b><span class="chip ${x.isE?"c-ems":x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}<span class="chip ${fut?"c-fut":"c-done"}">${fut?"מתוכננת":"עבדתי"}</span>
+        <div class="meta"><span class="nw" dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · <span class="nw">${fmt2(x.hrs)} שעות × ${x.rate} ₪</span></div>
+        ${extras.map(e=>`<div class="meta nw">${e}</div>`).join("")}
         ${x.fl.map(f=>`<div class="meta" style="color:var(--warn)">${esc(f)}</div>`).join("")}</div>
-      <span class="amt amt-ro num">${fmt2(x.pay)}</span>
-      <span class="pill ${fut?"s-none":"s-paid"}" style="cursor:default">${fut?"מתוכננת":"עבדתי"}</span></div>`;
+      <span class="amt-ro num inc-amt">${fmt2(x.pay)}</span></div>`;
   };
   const grp=(title,list,sum,cls)=>{
     if(!list.length) return "";
