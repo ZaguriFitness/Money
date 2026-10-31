@@ -857,6 +857,24 @@ function applyCal(k){
   const c=calDocs[k], s=shifts[k]; if(!c||!Array.isArray(c.events)) return;
   if(s&&s.ok&&s.atMs>=c.at) return;
   shifts[k]=Object.assign(classifyShifts(c.events),{at:fmtAt(c.at),atMs:c.at,needAuth:!gToken()});
+  addSatStreak(k);
+  // next month's first Saturday may continue this month's streak
+  const [y,m]=k.split("-").map(Number), nk=m===12?(y+1)+"-01":y+"-"+String(m+1).padStart(2,"0");
+  if(shifts[nk]&&shifts[nk].ok){ shifts[nk].atMs=0; applyCal(nk); }
+}
+// HIIT on Saturday a week after another HIIT Saturday: +100 for each Saturday in a row (3 in a row = +200)
+const isoDay=new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"});
+const hiitSats=list=>list.filter(x=>x.sat&&!x.isC&&!x.isE);
+function addSatStreak(k){
+  const s=shifts[k], amt=PROFILE.satStreak||100; if(!s||!s.ok) return;
+  const [y,m]=k.split("-").map(Number), pk=m===1?(y-1)+"-12":y+"-"+String(m-1).padStart(2,"0");
+  const prev=calDocs[pk]&&Array.isArray(calDocs[pk].events)?hiitSats(classifyShifts(calDocs[pk].events).list):[];
+  const sats=hiitSats(s.list), days=new Set(prev.concat(sats).map(x=>isoDay.format(x.s)));
+  sats.forEach(x=>{
+    if(days.has(isoDay.format(new Date(x.s-7*864e5)))){ x.streak=amt; x.pay=Math.round((x.pay+amt)*100)/100; }
+  });
+  s.total=Math.round(s.list.reduce((a,x)=>a+x.pay,0)*100)/100;
+  const now=new Date(); s.fut=s.list.filter(x=>x.s>now).reduce((a,x)=>a+x.pay,0);
 }
 function refreshMonth(m){
   if(calState==="none"||m<1||m>12) return;
@@ -1079,7 +1097,7 @@ function renderIncome(){
     const fut=x.s>now, type=x.isE?"EMS":x.isC?"קנטרי":"HIIT";
     return `<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div>
       <div class="what"><b>${x.isE?"עבודה":"משמרת"}</b><span class="chip ${x.isE?"c-ems":x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}
-        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}</div>
+        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}${x.streak?` + ${fmt2(x.streak)} ₪ שבת ברצף`:""}</div>
         ${x.fl.map(f=>`<div class="meta" style="color:var(--warn)">${esc(f)}</div>`).join("")}</div>
       <span class="amt amt-ro num">${fmt2(x.pay)}</span>
       <span class="pill ${fut?"s-none":"s-paid"}" style="cursor:default">${fut?"מתוכננת":"עבדתי"}</span></div>`;
