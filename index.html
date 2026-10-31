@@ -805,7 +805,9 @@ function classifyShifts(events){
     const hrs=Math.round((en-s)/60000)/60, sat=!isE&&wdFmt.format(s)==="Sat", rate=isE?EMS_RATE:sat?SAT_RATE:RATE;
     // "+30" in the title is an extra amount for that shift; "+ name" without a number adds nothing
     const bonus=[...t.matchAll(/\+\s*(\d+(?:\.\d+)?)/g)].reduce((a,m)=>a+Number(m[1]),0);
-    const sh={t,s,en,hrs,sat,isC,isE,rate,bonus,pay:Math.round((hrs*rate+bonus)*100)/100,fl:[]};
+    // HIIT on Wednesday and Saturday: opening and closing count 10 minutes each, so 20 more minutes at the shift's rate
+    const wd=wdFmt.format(s), oc=!isE&&!isC&&(wd==="Wed"||wd==="Sat")?Math.round(rate/3*100)/100:0;
+    const sh={t,s,en,hrs,sat,isC,isE,rate,bonus,oc,pay:Math.round((hrs*rate+bonus+oc)*100)/100,fl:[]};
     if(isC && !t.startsWith("משמרת_קנטרי")) sh.fl.push("השם לא כתוב \"משמרת_קנטרי\". נספרה כקנטרי.");
     if(hrs>12) sh.fl.push("יותר מ־12 שעות. לוודא שהשעות נכונות.");
     if(e.start.timeZone && e.start.timeZone!==TZ) sh.fl.push("שמורה באזור זמן "+e.start.timeZone+". חושב לפי שעון ישראל.");
@@ -1097,7 +1099,7 @@ function renderIncome(){
     const fut=x.s>now, type=x.isE?"EMS":x.isC?"קנטרי":"HIIT";
     return `<div class="row"><div class="day">${dnum.format(x.s)}<small>${dShort.format(x.s)}</small></div>
       <div class="what"><b>${x.isE?"עבודה":"משמרת"}</b><span class="chip ${x.isE?"c-ems":x.isC?"c-cty":"c-home"}">${type}</span>${x.sat?'<span class="chip c-sat">שבת</span>':""}
-        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}${x.streak?` + ${fmt2(x.streak)} ₪ שבת ברצף`:""}</div>
+        <div class="meta"><span dir="ltr">${tFmt.format(x.s)} – ${tFmt.format(x.en)}</span> · ${fmt2(x.hrs)} שעות × ${x.rate} ₪${x.bonus?` + ${fmt2(x.bonus)} ₪ תוספת`:""}${x.oc?` + ${fmt2(x.oc)} ₪ פתיחה וסגירה`:""}${x.streak?` + ${fmt2(x.streak)} ₪ שבת ברצף`:""}</div>
         ${x.fl.map(f=>`<div class="meta" style="color:var(--warn)">${esc(f)}</div>`).join("")}</div>
       <span class="amt amt-ro num">${fmt2(x.pay)}</span>
       <span class="pill ${fut?"s-none":"s-paid"}" style="cursor:default">${fut?"מתוכננת":"עבדתי"}</span></div>`;
