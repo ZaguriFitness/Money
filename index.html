@@ -112,6 +112,9 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .day small{display:block;font-family:var(--f-body);font-size:10px;color:var(--muted);line-height:1;margin-top:-6px}
 .what{min-width:0}
 .what b{font-weight:600}
+.day-edit{border:0;color:inherit;font:inherit;font-family:var(--f-display);font-size:18px;cursor:pointer;padding:0}
+.day-edit small{white-space:nowrap}
+.day-edit .dr{font-size:13px;letter-spacing:-.3px}
 .when-d{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .what .meta{font-size:13px;color:var(--muted)}
 .chip{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;margin-inline-start:6px;vertical-align:2px}
@@ -653,13 +656,14 @@ function renderMonth(){
   if(!loaded){ L.innerHTML=`<p class="muted small">${db===false?"לא הצלחתי להתחבר לנתונים השמורים. הסכומים למטה הם הערכות.":"הנתונים נטענים…"}</p>`; }
   rows.forEach(r=>{
     const el=document.createElement("div"); el.className="row pay-row";
-    el.innerHTML=`<div class="day">${r.p.day??"—"}<small>${r.p.day?"לחודש":"משתנה"}</small></div>
+    el.innerHTML=`<button type="button" class="day day-edit" aria-label="לשנות באיזה יום יורד ${r.p.name}">${r.p.day?(r.p.dayTo?`<span class="dr">${r.p.day}–${r.p.dayTo}</span>`:r.p.day):"—"}<small>${r.p.day?"לחודש ✎":"משתנה ✎"}</small></button>
       <div class="what"><b>${r.p.name}</b>${r.p.day?` <span class="when-d">(${r.p.day}${r.p.dayTo?"–"+r.p.dayTo:""}.${cur})</span>`:""}<span class="chip ${CAT[r.p.cat].cls}">${CAT[r.p.cat].name}</span><div class="meta">${r.p.covers}</div>
         ${r.log&&r.log.length?`<div class="meta loglist">${r.log.map((x,i)=>`<span class="logitem"><span class="num${x.a<0?" neg":""}">${x.a<0?"−":""}${fmtExact(Math.abs(x.a))} ₪${x.d?` ב־${Number(x.d.slice(8,10))}.${Number(x.d.slice(5,7))}`:""}</span><button type="button" class="logdel" data-i="${i}" aria-label="להסיר ${fmtExact(x.a)} ₪">×</button></span>`).join('<span class="logplus">+</span>')}</div>`:""}
         <form class="addform" hidden><input class="addin" type="number" inputmode="decimal" step="any" placeholder="כמה להוסיף?" aria-label="סכום להוספה ל${r.p.name}"><input class="adddate" type="date" aria-label="תאריך"><button type="submit" class="addok">הוספה</button><button type="button" class="addno">ביטול</button></form></div>
       <div class="amtwrap"><input class="amt${r.est?" est":""}" id="amt-${r.p.k}" type="number" inputmode="decimal" value="${r.est?"":r.a}" placeholder="~${r.p.typ}" aria-label="סכום ${r.p.name}"><button class="plus" type="button" data-mode="add" aria-label="להוסיף סכום ל${r.p.name}" title="להוסיף סכום">+</button><button class="plus minus" type="button" data-mode="sub" aria-label="להוריד סכום מ${r.p.name}" title="להוריד סכום">−</button></div>
       <button class="pill s-${r.s}" id="st-${r.p.k}" aria-label="סטטוס ${r.p.name}: ${SLABEL[r.s]}">${SLABEL[r.s]}</button>`;
     L.appendChild(el);
+    el.querySelector(".day-edit").addEventListener("click",()=>editDay(r.p));
     el.querySelector(".amt").addEventListener("change",e=>{const v=e.target.value.trim(); setItem(cur,r.p.k,{a:v===""?null:Number(v),log:null});});
     el.querySelector(".pill").addEventListener("click",()=>{const nx=r.s==="none"?"paid":STATES[(STATES.indexOf(r.s)+1)%3]; setItem(cur,r.p.k,{s:nx});});
     const f=el.querySelector(".addform");
@@ -719,11 +723,28 @@ function renderPayments(){
     const p=P.find(x=>x.k===b.dataset.k); if(!p||!db) return;
     const v=prompt(`כמה ${p.name} בדרך כלל?`,String(p.typ)); if(v===null) return;
     const n=Number(v.trim()); if(!v.trim()||isNaN(n)) return;
-    const prof=JSON.parse(JSON.stringify(PROFILE)); prof.payments=prof.payments.map(x=>x.k===p.k?Object.assign(x,{typ:n}):x);
-    db.doc("settings/profile").set(prof).then(()=>toast("נשמר")).catch(()=>toast("השמירה נכשלה"));
+    savePayment(p.k,{typ:n});
   }));
 }
 
+// usual amount and charge day live in the private profile
+function savePayment(k,patch){
+  if(!db) return;
+  const prof=JSON.parse(JSON.stringify(PROFILE));
+  prof.payments=prof.payments.map(x=>{ if(x.k!==k) return x; const y=Object.assign(x,patch); Object.keys(y).forEach(f=>{ if(y[f]===null) delete y[f]; }); return y; });
+  db.doc("settings/profile").set(prof).then(()=>toast("נשמר")).catch(()=>toast("השמירה נכשלה"));
+}
+function editDay(p){
+  const now=p.day?(p.dayTo?p.day+"-"+p.dayTo:String(p.day)):"";
+  const v=prompt(`באיזה יום בחודש יורד ${p.name}?\nמספר, למשל 2. אם זה בערך, טווח, למשל 13-15. ריק = בלי תאריך קבוע.`,now);
+  if(v===null) return;
+  const t=v.trim().replace(/[–—]/g,"-");
+  if(t===""){ savePayment(p.k,{day:null,dayTo:null}); return; }
+  const m=t.match(/^(\d{1,2})(?:\s*-\s*(\d{1,2}))?$/);
+  const a=m&&Number(m[1]), b=m&&m[2]?Number(m[2]):null;
+  if(!m||a<1||a>31||(b&&(b<1||b>31||b<=a))){ toast("לא הבנתי. כותבים מספר בין 1 ל־31, או טווח כמו 13-15."); return; }
+  savePayment(p.k,{day:a,dayTo:b});
+}
 /* ---------- year grid ---------- */
 let yearDirty=false, clickTimer=null, clickBtn=null;
 function editCell(b){
