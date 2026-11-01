@@ -224,6 +224,7 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .card .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .card .big{font-family:var(--f-display);font-size:24px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.typ-edit{background:none;border:0;padding:0;color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px}
 .facts{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px}
 .facts dt{color:var(--muted)} .facts dd{margin:0}
 .card .tip{font-size:13px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px}
@@ -702,12 +703,19 @@ function renderPayments(){
     const wrap=document.createElement("div"); wrap.className="group";
     wrap.innerHTML=`<div class="group-h"><h2>${title}</h2><span class="small muted">${sub}</span></div><div class="cards"></div>`;
     const cards=wrap.querySelector(".cards");
-    items.forEach(p=>{cards.insertAdjacentHTML("beforeend",`<article class="card"><div class="top"><h3>${p.name}</h3><span class="big">~${fmt(p.typ)} ₪</span></div>
+    items.forEach(p=>{cards.insertAdjacentHTML("beforeend",`<article class="card"><div class="top"><h3>${p.name}</h3><button type="button" class="big typ-edit" data-k="${p.k}" aria-label="לשנות את הסכום הרגיל של ${p.name}">~${fmt(p.typ)} ₪ ✎</button></div>
       <dl class="facts"><dt>מתי</dt><dd>${p.day?"ב־"+p.day+(p.dayTo?"–"+p.dayTo:"")+" לחודש":"אין תאריך קבוע"}</dd><dt>כל כמה</dt><dd>${p.freq}</dd><dt>על מה</dt><dd>${p.covers}</dd>${p.actual?`<dt>בפועל</dt><dd>${p.actual}</dd>`:""}</dl>${p.tip?`<p class="tip">${p.tip}</p>`:""}</article>`);});
     yr.forEach(y=>{cards.insertAdjacentHTML("beforeend",`<article class="card"><div class="top"><h3>${y.name}</h3><span class="big">${fmt(y.amt/12)} ₪</span></div>
       <dl class="facts"><dt>כל כמה</dt><dd>כל חודש</dd><dt>בפועל</dt><dd>${fmt(y.amt)} ₪, ${y.when}</dd></dl><p class="tip">${y.tip}</p></article>`);});
     G.appendChild(wrap);
   });
+  G.querySelectorAll(".typ-edit").forEach(b=>b.addEventListener("click",()=>{
+    const p=P.find(x=>x.k===b.dataset.k); if(!p||!db) return;
+    const v=prompt(`כמה ${p.name} בדרך כלל?`,String(p.typ)); if(v===null) return;
+    const n=Number(v.trim()); if(!v.trim()||isNaN(n)) return;
+    const prof=JSON.parse(JSON.stringify(PROFILE)); prof.payments=prof.payments.map(x=>x.k===p.k?Object.assign(x,{typ:n}):x);
+    db.doc("settings/profile").set(prof).then(()=>toast("נשמר")).catch(()=>toast("השמירה נכשלה"));
+  }));
 }
 
 /* ---------- year grid ---------- */
@@ -1248,6 +1256,13 @@ function applyProfile(v){
   Object.keys(calDocs).forEach(k=>{ if(shifts[k]&&shifts[k].ok) shifts[k].atMs=0; applyCal(k); });
   renderPayments(); renderAll();
 }
+// one-time changes the user asked for, applied once to the account (a later edit in the app wins)
+const PROFILE_FIXES={elec150:v=>(v.payments||[]).map(p=>p.k==="elec"?Object.assign({},p,{typ:150,tip:"קבוע: 150 ₪ בחודש."}):p)};
+function fixProfile(d,v){
+  const done=v.fixes||{}, todo=Object.keys(PROFILE_FIXES).filter(f=>!done[f]); if(!todo.length) return;
+  let payments=v.payments||[]; todo.forEach(f=>{ payments=PROFILE_FIXES[f]({payments}); });
+  d.doc("settings/profile").set({payments,fixes:Object.assign({},done,...todo.map(f=>({[f]:true})))},{merge:true}).catch(()=>{});
+}
 let unsubs=[];
 function attachDb(d){
   unsubs.forEach(u=>{try{u()}catch(e){}}); unsubs=[];
@@ -1256,6 +1271,7 @@ function attachDb(d){
     const prof=snap.docs.find(x=>x.id==="profile");
     snap.docs.forEach(x=>{ if(x.id!=="profile"){ const v=x.data()||{}; provNames[x.id]=Array.isArray(v.names)?v.names:[]; } });
     applyProfile(prof?prof.data():null);
+    if(prof&&d.kind==="cloud"&&!(snap.metadata&&snap.metadata.fromCache)) fixProfile(d,prof.data());
   },()=>{}));
   unsubs.push(d.collection("checks").onSnapshot(snap=>{
     checks=snap.docs.map(x=>Object.assign({},x.data(),{id:x.id})).sort((a,b)=>(b.order||0)-(a.order||0));
