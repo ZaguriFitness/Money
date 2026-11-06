@@ -1295,11 +1295,14 @@ function applyProfile(v){
 // one-time changes the user asked for, applied once to the account (a later edit in the app wins)
 const PROFILE_FIXES={
   elec150:v=>(v.payments||[]).map(p=>p.k==="elec"?Object.assign({},p,{typ:150,tip:"קבוע: 150 ₪ בחודש."}):p),
+  net148:v=>(v.payments||[]).map(p=>p.k==="net"?Object.assign({},p,{typ:148,tip:"מדצמבר 2026: 148 ₪ (עד נובמבר 128)."}):p),
   fuel2x:v=>(v.payments||[]).map(p=>p.k==="fuel"?Object.assign({},p,{typ:560,freq:"בערך פעמיים בחודש",covers:"כ־2 תדלוקים בחודש, כ־280 ₪ כל אחד",tip:"בכל תדלוק לוחצים + ורושמים את הסכום. חלק מהדלק אפשר לרשום כהוצאה מוכרת של העסק."}):p)
 };
 function fixProfile(d,v){
   const done=v.fixes||{}, todo=Object.keys(PROFILE_FIXES).filter(f=>!done[f]); if(!todo.length) return;
   let payments=v.payments||[]; todo.forEach(f=>{ payments=PROFILE_FIXES[f]({payments}); });
+  // the internet price changes from December: that month already held the old amount
+  if(todo.includes("net148")) d.collection("months").doc("2026-12").set({items:{net:{a:148}}},{merge:true}).catch(()=>{});
   d.doc("settings/profile").set({payments,fixes:Object.assign({},done,...todo.map(f=>({[f]:true})))},{merge:true}).catch(()=>{});
 }
 let unsubs=[];
