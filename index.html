@@ -179,6 +179,14 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .lg-cty .grp-toggle .caret{color:var(--save)}
 .grp-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .lg-prov{margin-top:14px}
+.lg-own{margin-top:14px;--pc:var(--warn)}
+.own-toggle{font:inherit;color:inherit;background:none;border:0;border-bottom:2px solid var(--warn);width:100%;text-align:right;cursor:pointer}
+.own-toggle .caret{color:var(--warn);font-size:14px;width:12px} .lg-own .lg-sum{color:var(--warn)}
+.own-item{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
+.own-a{font-weight:600;min-width:70px} .own-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.own-form{display:flex;flex-wrap:wrap;gap:6px;padding:10px 2px}
+.own-form input{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:7px 9px;min-width:0}
+.own-form .own-in{width:100px;direction:ltr;text-align:left} .own-form .own-name{flex:1 1 120px} .own-form .addbtn{padding:8px 16px}
 .pv-note{padding:8px 2px 2px;margin:0}
 .cash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 2px}
 .cash>div{display:flex;flex-direction:column;gap:2px;background:var(--bg);border-radius:8px;padding:8px 10px;min-width:0}
@@ -359,6 +367,7 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
         <div class="group-h"><h3>מה נכנס החודש</h3><span class="small muted" id="incSub"></span></div>
         <div class="ledger" id="incBody"><p class="muted small">המשמרות נטענות מהיומן…</p></div>
         <div id="provBoxes"></div>
+        <div id="ownBox"></div>
         <div class="ledger inc-static">
           <div class="row"><div class="day">+<small>ידני</small></div>
             <div class="what"><b>סכום נוסף</b><div class="meta">כל סכום שתרצה להוסיף להכנסות של החודש. נשמר ולא תלוי ביומן.</div></div>
@@ -639,14 +648,14 @@ function renderMonth(){
   const shS=shifts[key(cur)], shTot=shS&&shS.ok?shS.total:null, manual=false;
   const sal=manual?inc.hiit:shTot;
   const pv=provTotal(cur);
-  const more=(inc.extra||0)+(inc.biz||0);
-  const hasInc=sal!=null||typeof inc.extra==="number"||typeof inc.biz==="number"||provAny(cur);
-  const totIn=(sal||0)+more+pv;
+  const own=ownTotal(cur), more=(inc.extra||0)+(inc.biz||0);
+  const hasInc=sal!=null||typeof inc.extra==="number"||typeof inc.biz==="number"||own>0||provAny(cur);
+  const totIn=(sal||0)+more+pv+own;
   $("kOut").textContent=fmt(out)+" ₪";
   const paid=rows.filter(r=>r.s==="paid").length;
   $("kOutSub").textContent=paid+" מתוך "+rows.length+" שולמו";
   $("kIn").textContent=hasInc? fmt(totIn)+" ₪" : "לא רשום";
-  $("kInSub").textContent=hasInc? (manual?"משכורת "+fmt(inc.hiit):"משמרות "+fmt(shTot||0))+(pv?" · "+PROV.map(p=>p.name).join("/")+" "+fmt(pv):"")+(more?" · נוסף "+fmt(more):"") : (shS&&shS.loading?"טוען משמרות מהיומן…":"אפשר למלא למטה");
+  $("kInSub").textContent=hasInc? (manual?"משכורת "+fmt(inc.hiit):"משמרות "+fmt(shTot||0))+(pv?" · "+PROV.map(p=>p.name).join("/")+" "+fmt(pv):"")+(own?" · אישיים "+fmt(own):"")+(more?" · נוסף "+fmt(more):"") : (shS&&shS.loading?"טוען משמרות מהיומן…":"אפשר למלא למטה");
   renderIncome();
   const net=totIn-out;
   $("kLeft").textContent=hasInc? (net<0?"−":"")+fmt(Math.abs(net))+" ₪" : "—";
@@ -1090,7 +1099,41 @@ function renderProv(p){
     if(db) db.doc("settings/"+p.id).set({names:next}).catch(()=>{});
   }));
 }
-function renderProvs(){ [...$("provBoxes").children].forEach(b=>{ if(!PROV.some(p=>"prov-"+p.id===b.id)) b.remove(); }); PROV.forEach(renderProv); }
+function renderProvs(){ [...$("provBoxes").children].forEach(b=>{ if(!PROV.some(p=>"prov-"+p.id===b.id)) b.remove(); }); PROV.forEach(renderProv); renderOwn(); }
+/* ---------- personal training paid to me directly: amounts added by hand, each kept in the month ---------- */
+const ownList=m=>{ const v=(getM(m).income||{}).own; return Array.isArray(v)?v:[]; };
+const ownTotal=m=>Math.round(ownList(m).reduce((a,x)=>a+(Number(x.a)||0),0)*100)/100;
+let ownOpen=false, ownArmed=null;
+function renderOwn(){
+  const box=$("ownBox"); if(!box) return;
+  const list=ownList(cur), tot=ownTotal(cur);
+  const items=list.map((x,i)=>`<div class="own-item"><span class="num own-a">${fmt2(x.a)} ₪</span><span class="own-n">${esc(x.n||"")}</span><span class="small muted num">${x.d?`${Number(x.d.slice(8,10))}.${Number(x.d.slice(5,7))}`:""}</span><button type="button" class="logdel${ownArmed===i?" armed":""}" data-i="${i}" aria-label="להסיר">${ownArmed===i?"להסיר?":"×"}</button></div>`).join("");
+  const now=new Date(), dd=(now.getFullYear()===YEAR&&now.getMonth()+1===cur)?now.getDate():1;
+  box.innerHTML=`<div class="lg lg-own">
+    <button type="button" class="lg-h own-toggle" aria-expanded="${ownOpen}"><span class="caret" aria-hidden="true">${ownOpen?"▾":"‹"}</span><b>אימונים אישיים</b><span class="small muted">${list.length?(list.length===1?"תשלום אחד":list.length+" תשלומים"):"ישירות אליי"}</span><span class="lg-sum num">${fmt2(tot)} ₪</span></button>
+    <div class="own-body"${ownOpen?"":" hidden"}>
+      ${items||`<p class="muted small" style="margin:8px 2px">עוד לא נרשם כלום החודש.</p>`}
+      <form class="own-form">
+        <input class="own-in" type="number" inputmode="decimal" step="any" placeholder="סכום" aria-label="סכום" required>
+        <input class="own-name" type="text" maxlength="40" placeholder="ממי (לא חובה)" aria-label="ממי">
+        <input class="own-date" type="date" value="${YEAR}-${String(cur).padStart(2,"0")}-${String(dd).padStart(2,"0")}" aria-label="תאריך">
+        <button type="submit" class="addbtn">+ הוספה</button>
+      </form>
+    </div>
+  </div>`;
+  box.querySelector(".own-toggle").addEventListener("click",()=>{ownOpen=!ownOpen; renderOwn();});
+  box.querySelectorAll(".own-item .logdel").forEach(b=>b.addEventListener("click",()=>{
+    const i=Number(b.dataset.i);
+    if(ownArmed!==i){ ownArmed=i; renderOwn(); return; }
+    ownArmed=null; const next=list.slice(); next.splice(i,1); setIncome(cur,"own",next.length?next:null);
+  }));
+  box.querySelector(".own-form").addEventListener("submit",e=>{
+    e.preventDefault(); const f=e.target;
+    const a=Math.abs(Number(f.querySelector(".own-in").value)); if(!a) return;
+    const x={a,d:f.querySelector(".own-date").value||null}; const n=f.querySelector(".own-name").value.trim(); if(n) x.n=n;
+    setIncome(cur,"own",list.concat([x]));
+  });
+}
 function ymShift(m,d){ let y=YEAR, mm=m+d; while(mm<1){mm+=12;y--;} while(mm>12){mm-=12;y++;} return [y,mm]; }
 function earnedAt(p,y,m){
   const inc=(data[y+"-"+String(m).padStart(2,"0")]||{}).income||{}, f=inc[p.id+"Earned"];
@@ -1127,6 +1170,7 @@ function renderIncome(){
   // split bar + legend (same look as expenses)
   const parts=manual?[["משכורת בפועל",inc.hiit,"var(--accent)"]]:[["משמרות HIIT",rp,"var(--accent)"],["משמרות קנטרי",cp,"var(--save)"],["EMS",ep,"var(--ems)"]];
   PROV.forEach(p=>parts.push([p.name,provDueFor(p,cur)||0,p.color]));
+  parts.push(["אימונים אישיים",ownTotal(cur),"var(--warn)"]);
   parts.push(["נוסף",biz,"var(--gov)"]);
   const tot=parts.reduce((a,p)=>a+p[1],0);
   $("inSplit").innerHTML=tot>0?parts.filter(p=>p[1]>0).map(p=>`<span style="width:${p[1]/tot*100}%;background:${p[2]}"></span>`).join(""):"";
