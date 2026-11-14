@@ -368,11 +368,6 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
         <div class="ledger" id="incBody"><p class="muted small">המשמרות נטענות מהיומן…</p></div>
         <div id="provBoxes"></div>
         <div id="ownBox"></div>
-        <div class="ledger inc-static">
-          <div class="row"><div class="day">+<small>ידני</small></div>
-            <div class="what"><b>סכום נוסף</b><div class="meta">כל סכום שתרצה להוסיף להכנסות של החודש. נשמר ולא תלוי ביומן.</div></div>
-            <input class="amt" id="inExtra" type="number" inputmode="decimal" step="any" placeholder="0" aria-label="סכום נוסף להכנסות החודש"><span></span></div>
-        </div>
         <div class="sh-head"><span class="status" id="incStatus" role="status" style="flex:1">טוען מהיומן…</span><button class="refresh" id="incRefresh">רענון מהיומן</button></div>
       </div>
       <p class="foot" id="inFoot"></p>
@@ -710,11 +705,9 @@ function renderMonth(){
       setItem(cur,r.p.k,{a:sum,log});
     });
   });
-  $("inExtra").value=typeof inc.extra==="number"?inc.extra:"";
 }
 $("prevM").addEventListener("click",()=>{if(cur>1){cur--;renderAll();}});
 $("nextM").addEventListener("click",()=>{if(cur<12){cur++;renderAll();}});
-$("inExtra").addEventListener("change",e=>{const v=e.target.value.trim(); setIncome(cur,"extra",v===""?null:Number(v));});
 
 /* ---------- payments cards ---------- */
 function renderPayments(){
