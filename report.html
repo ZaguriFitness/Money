@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>דוח שנתי</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="theme-color" content="#1D6B58">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Secular+One&display=swap">
+<style>
+/* Layout: one narrow column. Steps as tabs (sticky), a sticky result bar at the bottom that follows every change. Same palette as MyMoney. */
+:root{
+  --bg:#F1F4F2; --surface:#FFFFFF; --ink:#1C2925; --muted:#5C6B66; --line:#D7DEDA;
+  --accent:#1D6B58; --accent-soft:#E0EEE9;
+  --ok:#2C7A4C; --ok-bg:#DCF0E3; --warn:#9A5B00; --warn-bg:#FBEED6; --bad:#B0261E; --bad-bg:#F7DDDA;
+  --gov:#7A4A8C; --gov-bg:#EFE4F3;
+  --f-display:"Secular One","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Hebrew",system-ui,"Segoe UI",Arial,sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111715; --surface:#19211F; --ink:#E5ECE9; --muted:#98A7A2; --line:#2A3532;
+  --accent:#62C3A6; --accent-soft:#1C3430;
+  --ok:#72D39C; --ok-bg:#1B3226; --warn:#F0B55C; --warn-bg:#382A13; --bad:#F38D84; --bad-bg:#3A1D1B;
+  --gov:#D3A6E6; --gov-bg:#2E2236; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111715; --surface:#19211F; --ink:#E5ECE9; --muted:#98A7A2; --line:#2A3532;
+  --accent:#62C3A6; --accent-soft:#1C3430;
+  --ok:#72D39C; --ok-bg:#1B3226; --warn:#F0B55C; --warn-bg:#382A13; --bad:#F38D84; --bad-bg:#3A1D1B;
+  --gov:#D3A6E6; --gov-bg:#2E2236; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;direction:rtl}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:20px 120px;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:28px} h2{font-size:22px} h3{font-size:18px}
+p{margin:0}
+a{color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:14px} .num{font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.top-l{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.pill.on{border-color:var(--accent);color:var(--accent)}
+select.pill{appearance:none;padding-inline:14px 30px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:left 14px center,left 9px center;background-size:5px 5px;background-repeat:no-repeat}
+.lead{color:var(--muted)}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:8px;z-index:5;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;font-size:15px;font-weight:500;border:1px solid var(--line);background:var(--surface);padding:7px 13px;border-radius:999px;display:inline-flex;gap:6px;align-items:center}
+nav.tabs button i{font-style:normal;font-size:12px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--muted);font-variant-numeric:tabular-nums}
+nav.tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+nav.tabs button[aria-selected="true"] i{background:var(--bg);color:var(--accent)}
+section.panel{display:flex;flex-direction:column;gap:14px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.note{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;font-size:15px}
+.warnbox{background:var(--warn-bg);border-radius:var(--r);padding:12px 14px;font-size:15px}
+.badbox{background:var(--bad-bg);border-radius:var(--r);padding:12px 14px;font-size:15px}
+.okbox{background:var(--ok-bg);border-radius:var(--r);padding:12px 14px;font-size:15px}
+.gh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* questions */
+.q{display:flex;flex-direction:column;gap:6px}
+.q>b{font-weight:600}
+.q .hint{font-size:14px;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:7px 12px;font-size:15px;text-align:right}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.ans{font-size:14px;border-inline-start:3px solid var(--accent);padding:4px 10px;color:var(--ink)}
+.ans.w{border-color:var(--warn)} .ans.b{border-color:var(--bad)}
+.f{display:flex;flex-direction:column;gap:3px;font-size:14px;color:var(--muted);min-width:0}
+.f input,.f select{font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px 10px;width:100%;min-width:0}
+.f input.n{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.f .fld{font-size:12px;color:var(--gov);font-weight:600}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.g3{grid-template-columns:1fr 1fr}.g3 .wide{grid-column:1/-1}}
+@media (max-width:400px){.g2{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.card .ch{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.x{border:0;background:transparent;color:var(--muted);font-size:14px;padding:4px 8px;border-radius:8px}
+.x:hover{color:var(--bad)} .x.arm{background:var(--bad-bg);color:var(--bad);font-weight:600}
+.add{border:1px dashed var(--accent);background:transparent;color:var(--accent);border-radius:10px;padding:9px 12px;font-weight:600}
+.btn{border:0;background:var(--accent);color:var(--bg);border-radius:10px;padding:9px 16px;font-weight:600}
+.btn2{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:500}
+.next{align-self:flex-start}
+
+/* expenses */
+.ex{display:grid;grid-template-columns:minmax(0,1fr) 110px 74px;gap:8px;align-items:center;padding-block:10px;border-top:1px solid var(--line)}
+.ex:first-of-type{border-top:0}
+.ex .t b{font-weight:600;display:block} .ex .t span{font-size:13px;color:var(--muted);display:block}
+.ex input{font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:7px 8px;width:100%;min-width:0;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.ex .pct{display:flex;align-items:center;gap:2px}
+.ex .pct input{padding-inline:6px;text-align:center}
+.ex .rec{grid-column:1/-1;font-size:13px;color:var(--muted);margin-top:-4px}
+.ex .rec b{color:var(--ink);font-weight:600}
+.ex.no input{opacity:.6}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.vs>div.best{border-color:var(--ok);background:var(--ok-bg)}
+.vs b.big{font-family:var(--f-display);font-size:24px;font-weight:400;font-variant-numeric:tabular-nums}
+
+/* result */
+.hero{border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:6px;background:var(--accent-soft)}
+.hero.refund{background:var(--ok-bg)} .hero.owe{background:var(--warn-bg)}
+.hero .big{font-family:var(--f-display);font-size:42px;line-height:1.1;font-variant-numeric:tabular-nums}
+.hero.refund .big{color:var(--ok)} .hero.owe .big{color:var(--warn)}
+.calc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;font-size:15px}
+.calc .v{font-variant-numeric:tabular-nums;text-align:left;direction:ltr}
+.calc .tot{font-weight:700;border-top:1px solid var(--line);padding-top:4px}
+.calc .ind{padding-inline-start:14px;color:var(--muted)}
+.flags{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.flags li{border-radius:10px;padding:10px 12px;font-size:15px;display:flex;gap:10px;align-items:flex-start}
+.flags li .ic{flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.flags li.money{background:var(--ok-bg)} .flags li.money .ic{background:var(--ok);color:var(--bg)}
+.flags li.warn{background:var(--warn-bg)} .flags li.warn .ic{background:var(--warn);color:var(--bg)}
+.flags li.bad{background:var(--bad-bg)} .flags li.bad .ic{background:var(--bad);color:var(--bg)}
+.flags li.info{background:var(--accent-soft)} .flags li.info .ic{background:var(--accent);color:var(--bg)}
+
+/* form map */
+.fpart{display:flex;flex-direction:column;gap:0}
+.frow{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:center;padding-block:9px;border-top:1px solid var(--line)}
+.frow:first-of-type{border-top:0}
+.fno{font-family:var(--f-display);font-size:18px;color:var(--gov);background:var(--gov-bg);border-radius:8px;text-align:center;padding:4px 0;font-variant-numeric:tabular-nums}
+.fno.txt{font-family:var(--f-body);font-size:12px;font-weight:600;padding:6px 2px}
+.ft b{font-weight:600;display:block} .ft span{font-size:13px;color:var(--muted);display:block}
+.ft .unsure{color:var(--warn);font-weight:600}
+.fv{display:flex;align-items:center;gap:6px}
+.fv .val{font-family:var(--f-display);font-size:18px;font-variant-numeric:tabular-nums;direction:ltr}
+.fv .val.zero{color:var(--muted);font-family:var(--f-body);font-size:14px}
+.cp{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:4px 8px;font-size:13px}
+.frow.dim{opacity:.55}
+
+/* checklist */
+.ck{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding-block:10px;border-top:1px solid var(--line);cursor:pointer}
+.ck:first-of-type{border-top:0}
+.ck input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent)}
+.ck b{font-weight:600;display:block} .ck span{font-size:14px;color:var(--muted);display:block}
+.ck.done b{text-decoration:line-through;color:var(--muted)}
+.meter{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.meter span{display:block;height:100%;background:var(--accent)}
+
+/* steps / details */
+details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+details summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"‹";color:var(--accent);font-size:20px;line-height:1}
+details[open] summary::after{content:"▾";font-size:15px}
+details summary .h{font-weight:600} details summary .s{font-size:14px;color:var(--muted)}
+details .body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+ol.steps{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:8px}
+ul.clean{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
+table.simple{border-collapse:collapse;width:100%;font-size:14px}
+table.simple th,table.simple td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right}
+table.simple th{color:var(--muted);font-weight:600}
+table.simple td.v{font-variant-numeric:tabular-nums;direction:ltr;text-align:left}
+.scroll{overflow-x:auto}
+.yr{display:grid;grid-template-columns:60px minmax(0,1fr);gap:10px;align-items:start;padding-block:10px;border-top:1px solid var(--line)}
+.yr:first-of-type{border-top:0}
+.yr .y{font-family:var(--f-display);font-size:20px}
+
+/* bottom result bar */
+.rbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--ink);color:var(--bg);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.rbar .in{max-width:828px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rbar b{font-family:var(--f-display);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+.rbar small{display:block;font-size:13px;opacity:.8}
+.rbar button{flex:0 0 auto;border:0;border-radius:10px;padding:8px 14px;background:var(--bg);color:var(--ink);font-weight:600}
+.status{font-size:13px;color:var(--muted)}
+.toast{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:15px;z-index:60;max-width:calc(100% - 32px)}
+.foot{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>הדוח השנתי שלי</h1>
+      <p class="lead small">עוסק פטור + שכיר. כל מה שצריך לטופס 1301, צעד אחרי צעד.</p>
+    </div>
+    <div class="top-l">
+      <label class="small muted" for="yearSel" style="display:none">שנת מס</label>
+      <select class="pill" id="yearSel" aria-label="שנת המס"></select>
+      <button type="button" class="pill" id="cloudBtn" hidden>☁ התחברות</button>
+      <a class="pill" href="./">→ MyMoney</a>
+    </div>
+  </header>
+
+  <div id="yearNote"></div>
+
+  <nav class="tabs" role="tablist" aria-label="שלבי הדוח">
+    <button role="tab" data-tab="me" aria-selected="true"><i>1</i>אני</button>
+    <button role="tab" data-tab="inc" aria-selected="false"><i>2</i>הכנסות</button>
+    <button role="tab" data-tab="exp" aria-selected="false"><i>3</i>הוצאות</button>
+    <button role="tab" data-tab="ded" aria-selected="false"><i>4</i>הפקדות וזיכויים</button>
+    <button role="tab" data-tab="res" aria-selected="false"><i>5</i>התוצאה</button>
+    <button role="tab" data-tab="form" aria-selected="false"><i>6</i>הטופס</button>
+    <button role="tab" data-tab="docs" aria-selected="false"><i>7</i>מסמכים</button>
+    <button role="tab" data-tab="past" aria-selected="false"><i>8</i>שנים קודמות</button>
+  </nav>
+
+  <!-- ===== 1. ME ===== -->
+  <section class="panel" id="p-me">
+    <div class="note">קודם כמה שאלות עליך. כל תשובה משנה כמה מס מגיע ממך, ולכן גם אם מגיע לך החזר. התשובות נשמרות אוטומטית.</div>
+    <div class="box" id="meBox"></div>
+    <button type="button" class="btn next" data-go="inc">הבא: הכנסות ←</button>
+  </section>
+
+  <!-- ===== 2. INCOME ===== -->
+  <section class="panel" id="p-inc" hidden>
+    <div class="box">
+      <div class="gh"><h2>משכורות (שכיר)</h2><span class="small muted">כל מעסיק = טופס 106 אחד</span></div>
+      <p class="small muted">בסוף מרץ כל מעסיק חייב לתת לך <b>טופס 106</b> על השנה. ממנו מעתיקים 3 מספרים. אם לא קיבלת, מבקשים ממנהל החשבונות או מורידים מאזור העובד.</p>
+      <div id="empList"></div>
+      <button type="button" class="add" id="addEmp">+ מעסיק</button>
+    </div>
+
+    <div class="box">
+      <div class="gh"><h2>העסק (עוסק פטור)</h2><span class="small muted">מחזור = כל מה שנכנס, לפני הוצאות</span></div>
+      <label class="f">מחזור השנה מהעסק (₪)<span class="fld">טופס 1320, ומשם לשדה 150</span><input class="n" data-k="biz.turnover" inputmode="decimal" placeholder="0"></label>
+      <p class="small muted">המספר הזה צריך להיות <b>שווה</b> לסכום הקבלות שהוצאת בשנה, ולמה שדיווחת למע"מ בהצהרת המחזור (עד 31.1). הבדל בין השניים זה דגל אדום אצלם.</p>
+      <div id="importBox"></div>
+    </div>
+
+    <div class="box">
+      <div class="gh"><h2>מס שלקוחות כבר הורידו לך</h2><span class="small muted">טופס 857</span></div>
+      <p class="small muted">חדר כושר, סטודיו או חברה ששילמו לך נגד קבלה <b>לפעמים מורידים מס במקור</b> (ומעבירים אותו למס הכנסה בשמך). זה כסף ששילמת כבר, והוא חוזר אליך בדוח. מבקשים מהם "אישור ניכוי מס במקור, טופס 857" לשנה.</p>
+      <div id="whList"></div>
+      <button type="button" class="add" id="addWh">+ לקוח שהוריד מס</button>
+    </div>
+
+    <div class="box">
+      <h2>מקדמות למס הכנסה</h2>
+      <label class="f">כמה מקדמות שילמת בשנה למס הכנסה (לא לביטוח לאומי)<input class="n" data-k="advances" inputmode="decimal" placeholder="0"></label>
+      <p class="small muted">אם לא קיבלת פנקס מקדמות ולא שילמת, משאירים 0. רואים את זה ב"מצב חשבון" באזור האישי באתר רשות המסים.</p>
+    </div>
+    <button type="button" class="btn next" data-go="exp">הבא: הוצאות ←</button>
+  </section>
+
+  <!-- ===== 3. EXPENSES ===== -->
+  <section class="panel" id="p-exp" hidden>
+    <div class="note">רק הוצאה <b>של העסק</b> (אימונים אישיים), עם קבלה על שמך. הוצאות של העבודה כשכיר לא נכנסות. האחוז הוא כמה מההוצאה מס הכנסה מכיר. אפשר לשנות אותו אם יש לך סיבה.</div>
+    <div class="box" id="expBox"></div>
+    <div class="box" id="zairBox"></div>
+    <button type="button" class="btn next" data-go="ded">הבא: הפקדות וזיכויים ←</button>
+  </section>
+
+  <!-- ===== 4. DEDUCTIONS ===== -->
+  <section class="panel" id="p-ded" hidden>
+    <div class="note">כל שורה כאן מורידה מס. את הסכומים לוקחים מ<b>אישור שנתי למס</b> שהגוף שולח (או שמורידים מהאתר שלו) בתחילת השנה.</div>
+    <div class="box" id="dedBox"></div>
+    <button type="button" class="btn next" data-go="res">לתוצאה ←</button>
+  </section>
+
+  <!-- ===== 5. RESULT ===== -->
+  <section class="panel" id="p-res" hidden>
+    <div id="resHero"></div>
+    <div class="box"><h2>מה רואה חשבון היה בודק</h2><ul class="flags" id="flags"></ul></div>
+    <div class="box"><h2>איך הגעתי למספר</h2><div class="calc" id="calc"></div>
+      <p class="small muted">הערכה לפי מדרגות המס ושווי נקודת הזיכוי של השנה, לא חישוב רשמי. החישוב האמיתי נעשה במערכת של רשות המסים כשמגישים. אם התוצאה כאן רחוקה מאוד ממה שהמערכת מראה, כנראה ששדה הועתק לא נכון.</p>
+    </div>
+    <button type="button" class="btn next" data-go="form">למלא את הטופס ←</button>
+  </section>
+
+  <!-- ===== 6. FORM ===== -->
+  <section class="panel" id="p-form" hidden>
+    <div class="note">כאן מופיע <b>רק מה שרלוונטי אליך</b>, לפי מספר השדה בטופס 1301, עם הערך שלך מוכן להעתקה. בטופס המקוון מחפשים את מספר השדה ומקלידים. שדה בלי ערך משאירים ריק.</div>
+    <div class="box">
+      <h2>איפה ממלאים</h2>
+      <ol class="steps">
+        <li>נכנסים ל<a href="https://www.gov.il/he/service/reporting-and-payment-2025-annual-tax-report-for-individuals" target="_blank" rel="noopener">דף הדוח השנתי ברשות המסים</a> (בחודשים ינואר–פברואר עולה דף לשנה החדשה. מחפשים "דוח מס שנתי <span class="yN"></span> ליחידים").</li>
+        <li>בוחרים <b>"הגשה מקוונת"</b> ומזדהים עם ההזדהות הממשלתית (תעודת זהות + סיסמה/SMS).</li>
+        <li>המערכת ממלאת לבד חלק מהנתונים (106 מהמעסיקים, הפקדות לקופות). <b>בודקים כל מספר מול הטבלה כאן.</b> איפה שחסר, מקלידים.</li>
+        <li>בסוף המערכת מראה חישוב: החזר או חוב. משווים לתוצאה בלשונית 5.</li>
+        <li>שולחים ושומרים את האישור (PDF) כאן בטלפון או במייל.</li>
+      </ol>
+      <p class="small muted">הוראות המילוי הרשמיות: <a href="https://www.gov.il/BlobFolder/generalpage/income-tax-guide-knowyourright/he/Guides_IncomeTax_da-2025.pdf" target="_blank" rel="noopener">"דע זכויותיך וחובותיך" לשנת 2025 (PDF)</a>. כל שנה יוצאת חוברת חדשה עם אותו שם.</p>
+    </div>
+    <div id="formMap"></div>
+  </section>
+
+  <!-- ===== 7. DOCS ===== -->
+  <section class="panel" id="p-docs" hidden>
+    <div class="box">
+      <div class="gh"><h2>מה לאסוף לפני שמתחילים</h2><span class="small muted num" id="docCount"></span></div>
+      <div class="meter"><span id="docBar" style="width:0%"></span></div>
+      <div id="docList"></div>
+    </div>
+    <div class="box">
+      <h2>לאורך השנה, כדי שבשנה הבאה יהיה קל</h2>
+      <ul class="clean">
+        <li>על <b>כל</b> תשלום מהעסק מוציאים קבלה באותו יום (גם במזומן, גם בביט). זה המקור של המחזור.</li>
+        <li>כל קבלה על הוצאה של העסק: מצלמים ושומרים בתיקייה אחת, לפי חודשים. שומרים 7 שנים.</li>
+        <li>מכניסים כל אימון אישי ב־MyMoney. כך המחזור כבר סכום מוכן בסוף השנה.</li>
+        <li>בינואר: הצהרת מחזור למע"מ (עד 31.1). אותו מספר בדיוק ייכנס אחר כך לדוח.</li>
+        <li>אם מתחילים לעבוד אצל מעסיק נוסף: <b>תיאום מס</b> באתר רשות המסים. בלי זה, המעסיק השני מוריד מס מקסימלי.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 8. PAST ===== -->
+  <section class="panel" id="p-past" hidden>
+    <div class="note">אם בשנים קודמות לא מילאת משהו (הוצאות, נקודות זיכוי, 857, הפקדות), יכול להיות שמגיע לך כסף. מסמנים כל שנה, והאפליקציה אומרת מה לעשות.</div>
+    <div class="box" id="pastBox"></div>
+    <details>
+      <summary><span><span class="h">איך בודקים מה הגשתי בפועל</span><br><span class="s">בלי רואה חשבון</span></span></summary>
+      <div class="body">
+        <ol class="steps">
+          <li>באתר רשות המסים נכנסים ל<b>אזור האישי</b> (הזדהות ממשלתית).</li>
+          <li>שם רואים <b>"מצב חשבון"</b> ו<b>"שומות"</b> לכל שנה: מה דיווחת, מה החישוב שלהם, אם יצא החזר או חוב.</li>
+          <li>פותחים את הדוח של כל שנה ובודקים: האם מילאת הוצאות? נקודות זיכוי (צבא, תואר)? 857? ביטוח לאומי בשדה 030?</li>
+          <li>בוחרים את השנה בבורר למעלה, ממלאים כאן את הנתונים של אותה שנה, ומשווים את התוצאה למה שיצא אז.</li>
+        </ol>
+      </div>
+    </details>
+  </section>
+
+  <p class="foot">זה כלי לסדר בראש, לא ייעוץ מס. מספרי השדות לקוחים מהוראות המילוי של השנים האחרונות. מסומן <span style="color:var(--warn);font-weight:600">"לוודא"</span> במקומות שבהם כדאי להסתכל על הטופס של אותה שנה. בספק אפשר להתקשר למוקד רשות המסים (‎*4954) או ללכת ל"סיוע בהגשת דוח" שהרשות מציעה בחינם.</p>
+</div>
+
+<div class="rbar" id="rbar"><div class="in"><div><small id="rbarS">הערכה לשנת המס</small><b id="rbarV">—</b></div><button type="button" data-go="res">פירוט</button></div></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>(n<0?"-":"")+Math.round(Math.abs(n)).toLocaleString("he-IL");
+const num=v=>{ if(typeof v==="number") return isFinite(v)?v:0; const n=parseFloat(String(v||"").replace(/[,\s₪]/g,"")); return isFinite(n)?n:0; };
+function toast(t){ const el=$("toast"); el.textContent=t; el.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>el.hidden=true,2200); }
+
+/* ---------- tax parameters per tax year ----------
+   brackets: annual upper limits. cp: credit point value per year. patur: VAT exemption ceiling.
+   2024-2027 brackets and credit point are frozen except the 20%/31% widening from 2026. */
+const BR_OLD=[[84120,.10],[120720,.14],[193800,.20],[269280,.31],[560280,.35],[721560,.47],[Infinity,.50]];
+const BR_26=[[84120,.10],[120720,.14],[228000,.20],[301200,.31],[560280,.35],[721560,.47],[Infinity,.50]];
+const PARAMS={
+  2026:{br:BR_26,cp:2904,patur:122833,hisht:13203,don:200,file:"עד סוף אפריל 2027 בערך (בדרך כלל ניתנת דחייה להגשה מקוונת)"},
+  2025:{br:BR_OLD,cp:2904,patur:120000,hisht:13203,don:200,file:"המועד הרגיל עבר (הוארך עד יוני-אוגוסט 2026). אם לא הגשת, מגישים עכשיו"},
+  2024:{br:BR_OLD,cp:2904,patur:120000,hisht:13203,don:200,file:"שנה שעברה. רלוונטי לבדיקה או לתיקון",old:true}
+};
+const YEARS=[2026,2025,2024];
+const P=()=>PARAMS[S.year]||PARAMS[2026];
+
+/* ---------- state ---------- */
+const blank=y=>({year:y,me:{},emps:[],biz:{turnover:""},wh:[],advances:"",exp:{},ded:{},docs:{}});
+let S=blank(2026), PAST={}, tab="me";
+
+/* ---------- storage: Firebase (same account as MyMoney) or this device ---------- */
+const FIREBASE_CONFIG={apiKey:"AIzaSyBXAQDWHONwFsBWbyBw38ZGBLaBh_ywsuc",authDomain:"coach-builder-7365d.firebaseapp.com",projectId:"coach-builder-7365d",storageBucket:"coach-builder-7365d.firebasestorage.app",messagingSenderId:"406298622061",appId:"1:406298622061:web:59235a12be1a985a90a764"};
+const FB_SDK="https://www.gstatic.com/firebasejs/10.14.1/";
+const FB={user:null,fs:null,auth:null};
+const LK="money_tax_local";
+const loadLocal=()=>{ try{ return JSON.parse(localStorage.getItem(LK)||"{}")||{}; }catch(e){ return {}; } };
+const saveLocal=a=>{ try{ localStorage.setItem(LK,JSON.stringify(a)); }catch(e){} };
+const taxCol=()=>FB.fs.collection(`users/${FB.user.uid}/money_tax`);
+let saveT=null;
+function persist(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    const a=loadLocal(); a[S.year]=S; a.past=PAST; saveLocal(a);
+    if(FB.user) Promise.all([taxCol().doc(String(S.year)).set(JSON.parse(JSON.stringify(S))),taxCol().doc("past").set(PAST)]).catch(()=>toast("השמירה בענן נכשלה. נשמר במכשיר."));
+  },400);
+}
+async function loadYear(y){
+  let v=null;
+  if(FB.user){ try{ const d=await taxCol().doc(String(y)).get(); if(d.exists) v=d.data(); }catch(e){} }
+  if(!v){ const a=loadLocal(); v=a[y]||null; }
+  S=Object.assign(blank(y),v||{}); S.year=y;
+  ["me","biz","exp","ded","docs"].forEach(k=>{ if(!S[k]||typeof S[k]!=="object") S[k]=k==="biz"?{turnover:""}:{}; });
+  ["emps","wh"].forEach(k=>{ if(!Array.isArray(S[k])) S[k]=[]; });
+  try{ localStorage.setItem("money_tax_year",String(y)); }catch(e){}
+  renderAll();
+}
+function loadScript(src){ return new Promise((ok,fail)=>{ const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=fail; document.head.appendChild(el); }); }
+async function initCloud(){
+  try{ await loadScript(FB_SDK+"firebase-app-compat.js"); await Promise.all(["auth","firestore"].map(m=>loadScript(FB_SDK+`firebase-${m}-compat.js`))); }
+  catch(e){ return; }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  FB.fs=firebase.firestore(); FB.auth=firebase.auth();
+  $("cloudBtn").hidden=false;
+  FB.auth.onAuthStateChanged(async user=>{
+    FB.user=user||null;
+    $("cloudBtn").textContent=user?"☁ מסונכרן":"☁ התחברות";
+    $("cloudBtn").classList.toggle("on",!!user);
+    if(user){
+      try{ const p=await taxCol().doc("past").get(); if(p.exists) PAST=p.data()||{}; }catch(e){}
+      // first sign-in on this device: push what was typed before signing in
+      try{ const d=await taxCol().doc(String(S.year)).get(); if(!d.exists&&loadLocal()[S.year]) await taxCol().doc(String(S.year)).set(loadLocal()[S.year]); }catch(e){}
+      loadYear(S.year); loadMyMoney();
+    }
+  });
+}
+$("cloudBtn").addEventListener("click",()=>{
+  if(FB.user){ if(confirm("להתנתק מהסנכרון?")) FB.auth.signOut().then(()=>location.reload()); return; }
+  const em=prompt("מייל (אותו חשבון של MyMoney):"); if(!em) return;
+  const pw=prompt("סיסמה:"); if(!pw) return;
+  FB.auth.signInWithEmailAndPassword(em.trim(),pw).then(()=>toast("מחובר")).catch(()=>toast("ההתחברות נכשלה"));
+});
+
+/* ---------- MyMoney import: business money that came in during the year ---------- */
+let MM=null; // {sources:{key:{name,months:[12]}}}
+async function loadMyMoney(){
+  let months={}, prof={};
+  try{
+    if(FB.user){
+      const base=`users/${FB.user.uid}`;
+      const [ms,pr]=await Promise.all([FB.fs.collection(base+"/money_months").get(),FB.fs.doc(base+"/money_meta/profile").get()]);
+      ms.forEach(d=>months[d.id]=d.data()); prof=pr.exists?pr.data():{};
+    } else {
+      const a=JSON.parse(localStorage.getItem("money_local")||"{}")||{};
+      months=a.months||{}; prof=(a.settings||{}).profile||{};
+    }
+  }catch(e){ MM=null; renderImport(); return; }
+  const provs=(prof.prov||[]).concat(prof.extra?[prof.extra]:[]).filter(p=>p&&p.id);
+  const src={own:{name:"אימונים אישיים (ישירות אליך)",months:Array(12).fill(0)}};
+  provs.forEach(p=>src["p_"+p.id]={name:"תשלומים מ"+(p.name||p.id),months:Array(12).fill(0)});
+  src.biz={name:"\"עסק\" שהוקלד ידנית",months:Array(12).fill(0)};
+  let any=false;
+  for(let m=1;m<=12;m++){
+    const inc=(months[S.year+"-"+String(m).padStart(2,"0")]||{}).income||{};
+    if(Array.isArray(inc.own)) inc.own.forEach(x=>{ src.own.months[m-1]+=num(x.a); });
+    provs.forEach(p=>{ if(typeof inc[p.id]==="number") src["p_"+p.id].months[m-1]+=inc[p.id]; });
+    if(typeof inc.biz==="number") src.biz.months[m-1]+=inc.biz;
+  }
+  Object.keys(src).forEach(k=>{ if(src[k].months.some(v=>v)) any=true; else delete src[k]; });
+  MM=any?{sources:src}:null;
+  renderImport();
+}
+function renderImport(){
+  const box=$("importBox"); if(!box) return;
+  if(!MM){ box.innerHTML=`<p class="small muted">אין עדיין הכנסות מהעסק ב־MyMoney לשנת ${S.year}${FB.user?"":" במכשיר הזה (אפשר להתחבר כדי למשוך מהענן)"}. אפשר להקליד את המחזור ידנית מספר הקבלות.</p>`; return; }
+  const sel=S.biz.src||Object.fromEntries(Object.keys(MM.sources).map(k=>[k,true]));
+  const sum=Object.keys(MM.sources).filter(k=>sel[k]).reduce((a,k)=>a+MM.sources[k].months.reduce((x,y)=>x+y,0),0);
+  box.innerHTML=`<div class="card"><b>נמצא ב־MyMoney לשנת ${S.year}</b>
+    ${Object.entries(MM.sources).map(([k,s])=>`<label class="ck${sel[k]?"":" done"}" style="padding-block:6px"><input type="checkbox" data-src="${k}"${sel[k]?" checked":""}><div><b>${esc(s.name)}</b><span class="num">${fmt(s.months.reduce((x,y)=>x+y,0))} ₪</span></div></label>`).join("")}
+    <p class="small muted">מסמנים רק מה שהוא הכנסה <b>מהעסק</b> (נגד קבלה שלך). מה ששולם בתלוש משכורת לא נכנס לכאן, הוא כבר ב־106.</p>
+    <button type="button" class="btn2" id="useImp">להשתמש בסכום: <b class="num">${fmt(sum)} ₪</b></button></div>`;
+  box.querySelectorAll("[data-src]").forEach(c=>c.addEventListener("change",()=>{ const s=Object.assign({},sel); s[c.dataset.src]=c.checked; S.biz.src=s; persist(); renderImport(); }));
+  $("useImp").addEventListener("click",()=>{ S.biz.turnover=String(Math.round(sum)); persist(); renderInc(); recalc(); toast("המחזור עודכן"); });
+}
+
+/* ---------- 1. ME ---------- */
+const ME_Q=[
+  {k:"sex",t:"מין",o:[["m","גבר"],["f","אישה"]],a:{m:"2.25 נקודות זיכוי בסיס.",f:"2.75 נקודות זיכוי בסיס."}},
+  {k:"soldier",t:"השתחררת מצבא או משירות לאומי ב־3 השנים שלפני השנה הזו או במהלכה?",o:[["no","לא"],["yes","כן"]],
+    a:{yes:"מגיעות לך נקודות זיכוי נוספות, ל־36 חודשים מהחודש שאחרי השחרור. זו אחת הטעויות הכי נפוצות: לא מסמנים, ומפסידים אלפי שקלים.",no:""}},
+  {k:"degree",t:"סיימת תואר או לימודי מקצוע (כמו הסמכה ממוסד מוכר)?",o:[["no","לא"],["ba","תואר ראשון"],["ma","תואר שני"],["prof","תעודת מקצוע (משרד העבודה)"]],
+    a:{ba:"נקודת זיכוי אחת לשנה אחת: בשנה שאחרי סיום התואר (או בשנה שאחריה, לבחירתך).",ma:"חצי נקודה לשנה אחת, בשנה שאחרי סיום התואר.",prof:"תעודה מקצועית מוכרת יכולה לתת נקודות. נכון לתעודה שמוכרת ע\"י משרד העבודה, לא לכל קורס. לוודא.",no:""}},
+  {k:"kids",t:"יש לך ילדים?",o:[["no","לא"],["yes","כן"]],a:{yes:"לילדים יש נקודות זיכוי לפי גיל ואם אתה/את ההורה שמקבל קצבת ילדים. האפליקציה לא מחשבת אותן. לבדוק בחוברת ההוראות.",no:""}},
+  {k:"yishuv",t:"גרת כל השנה ביישוב מזכה (פריפריה או קו עימות)?",o:[["no","לא"],["yes","כן"],["?","לא יודע"]],a:{yes:"יש זיכוי מיוחד באחוזים מההכנסה. האפליקציה לא מחשבת אותו. רשימת היישובים מתפרסמת בכל שנה באתר רשות המסים.",["?"]:"כדאי לבדוק. רשימת היישובים המזכים מתפרסמת באתר רשות המסים.",no:""}},
+  {k:"gym",t:"בחדר הכושר שאתה עובד בו כמה פעמים בחודש, איך משלמים לך?",o:[["slip","בתלוש משכורת"],["receipt","אני נותן להם קבלה"],["invoice","הם דורשים חשבונית מס"],["?","לא בטוח"]],
+    a:{slip:"אז אתה שם שכיר, לא עוסק. מוסיפים אותם כמעסיק בלשונית הכנסות, לפי טופס 106 שלהם. הכסף הזה לא נכנס למחזור של העסק.",
+       receipt:"זו הכנסה של העסק (עוסק פטור), נכנסת למחזור. בקש מהם טופס 857 אם הורידו לך מס במקור, זה כסף שחוזר אליך.",
+       invoice:"עוסק פטור לא יכול להוציא חשבונית מס, רק קבלה. כדי להוציא חשבונית מס צריך להיות עוסק מורשה. אם הם צריכים חשבונית, האפשרויות: שיעסיקו אותך בתלוש, או שתעבור למורשה. אל תוציא \"חשבונית\" כפטור. זה בעייתי מול מע\"מ.",
+       "?":"זה חשוב לדוח: תלוש = שכיר (106). קבלה = הכנסת העסק. תבדוק בחשבון הבנק מה כתוב בהעברה, או תשאל את מנהל החשבונות שלהם."}},
+  {k:"multi",t:"עבדת אצל יותר ממעסיק אחד באותה שנה?",o:[["no","לא"],["yes","כן"]],a:{yes:"אם לא עשית תיאום מס, המעסיק השני הוריד מס לפי המדרגה הכי גבוהה. כנראה שמגיע לך החזר. הדוח השנתי מתקן את זה.",no:""}},
+  {k:"zair",t:"נרשמת ברשות המסים כ\"עסק זעיר\" (ניכוי 30% במקום הוצאות)?",o:[["no","לא"],["yes","כן"],["?","לא יודע"]],a:{yes:"אז בשנה הזו מנכים 30% מהמחזור במקום הוצאות. בלשונית ההוצאות רואים מה עדיף לך.",no:"",["?"]:"רואים את זה באזור האישי ברשות המסים (סוג התיק). בלשונית ההוצאות יש השוואה מה עדיף לך."}}
+];
+function renderMe(){
+  const me=S.me;
+  let h=ME_Q.map(q=>{
+    const v=me[q.k]; const ans=v&&q.a&&q.a[v];
+    const cls=q.k==="gym"&&(v==="invoice")?" b":q.k==="gym"&&v==="?"?" w":"";
+    let extra="";
+    if(q.k==="soldier"&&v==="yes") extra=`<div class="g2"><label class="f">תאריך שחרור<input type="date" data-me="relDate" value="${esc(me.relDate||"")}"></label><label class="f">משך השירות<select data-me="relLong"><option value="long"${me.relLong!=="short"?" selected":""}>לפחות 23 חודשים (גבר) / 22 (אישה)</option><option value="short"${me.relLong==="short"?" selected":""}>פחות מזה (לפחות 12 חודשים)</option></select></label></div>`;
+    if(q.k==="degree"&&v&&v!=="no") extra=`<label class="f">באיזו שנה סיימת (קיבלת זכאות)?<input class="n" inputmode="numeric" data-me="degYear" value="${esc(me.degYear||"")}" placeholder="למשל 2024"></label>`;
+    return `<div class="q"><b>${q.t}</b><div class="seg">${q.o.map(([val,l])=>`<button type="button" data-q="${q.k}" data-v="${val}" aria-pressed="${v===val}">${l}</button>`).join("")}</div>${extra}${ans?`<p class="ans${cls}">${ans}</p>`:""}</div>`;
+  }).join("");
+  $("meBox").innerHTML=h;
+  $("meBox").querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{ S.me[b.dataset.q]=b.dataset.v; persist(); renderMe(); recalc(); }));
+  $("meBox").querySelectorAll("[data-me]").forEach(i=>i.addEventListener("change",()=>{ S.me[i.dataset.me]=i.value; persist(); renderMe(); recalc(); }));
+}
+
+/* ---------- 2. INCOME ---------- */
+function renderInc(){
+  $("empList").innerHTML=S.emps.length?S.emps.map((e,i)=>`<div class="card" style="margin-bottom:10px"><div class="ch"><input aria-label="שם המעסיק" data-e="${i}" data-f="name" value="${esc(e.name||"")}" placeholder="שם המעסיק" style="border:0;background:transparent;font-weight:600;font-size:16px;min-width:0;flex:1"><button type="button" class="x" data-del-e="${i}">הסרה</button></div>
+    <div class="g3"><label class="f">הכנסה חייבת במס<span class="fld">ב־106: שדה 158 (או 172)</span><input class="n" inputmode="decimal" data-e="${i}" data-f="gross" value="${esc(e.gross||"")}" placeholder="0"></label>
+    <label class="f">מס שנוכה<span class="fld">ב־106: שדה 042</span><input class="n" inputmode="decimal" data-e="${i}" data-f="tax" value="${esc(e.tax||"")}" placeholder="0"></label>
+    <label class="f wide">הפקדת עובד לפנסיה<span class="fld">ב־106: שדה 086 (או 045)</span><input class="n" inputmode="decimal" data-e="${i}" data-f="pens" value="${esc(e.pens||"")}" placeholder="0"></label></div></div>`).join("")
+    :`<p class="small muted">עוד לא הוספת מעסיקים. מוסיפים אחד לכל טופס 106 שיש לך לשנה הזו.</p>`;
+  $("empList").querySelectorAll("[data-e]").forEach(inp=>inp.addEventListener("input",()=>{ S.emps[+inp.dataset.e][inp.dataset.f]=inp.value; persist(); recalc(); }));
+  armDel($("empList"),"data-del-e",i=>{ S.emps.splice(i,1); renderInc(); });
+  $("whList").innerHTML=S.wh.length?S.wh.map((w,i)=>`<div class="card" style="margin-bottom:10px"><div class="g2"><label class="f">ממי<input data-w="${i}" data-f="name" value="${esc(w.name||"")}" placeholder="שם הלקוח"></label><label class="f">מס שנוכה<span class="fld">ב־857, נכנס לשדה 040</span><input class="n" inputmode="decimal" data-w="${i}" data-f="amt" value="${esc(w.amt||"")}" placeholder="0"></label></div><button type="button" class="x" style="align-self:flex-start" data-del-w="${i}">הסרה</button></div>`).join(""):"";
+  $("whList").querySelectorAll("[data-w]").forEach(inp=>inp.addEventListener("input",()=>{ S.wh[+inp.dataset.w][inp.dataset.f]=inp.value; persist(); recalc(); }));
+  armDel($("whList"),"data-del-w",i=>{ S.wh.splice(i,1); renderInc(); });
+  bindPaths($("p-inc"));
+  renderImport();
+}
+function armDel(root,attr,fn){
+  root.querySelectorAll(`[${attr}]`).forEach(b=>b.addEventListener("click",()=>{
+    if(!b.classList.contains("arm")){ b.classList.add("arm"); b.textContent="להסיר?"; setTimeout(()=>{ if(b.isConnected){ b.classList.remove("arm"); b.textContent="הסרה"; } },3000); return; }
+    fn(+b.getAttribute(attr)); persist(); recalc();
+  }));
+}
+$("addEmp").addEventListener("click",()=>{ S.emps.push({name:"",gross:"",tax:"",pens:""}); persist(); renderInc(); const l=$("empList").querySelectorAll('[data-f="name"]'); if(l.length) l[l.length-1].focus(); });
+$("addWh").addEventListener("click",()=>{ S.wh.push({name:"",amt:""}); persist(); renderInc(); });
+// simple inputs bound to a path like "biz.turnover"
+function getPath(p){ return p.split(".").reduce((o,k)=>o==null?o:o[k],S); }
+function setPath(p,v){ const ks=p.split("."), last=ks.pop(); let o=S; ks.forEach(k=>{ if(!o[k]||typeof o[k]!=="object") o[k]={}; o=o[k]; }); o[last]=v; }
+function bindPaths(root){
+  root.querySelectorAll("[data-k]").forEach(inp=>{
+    const v=getPath(inp.dataset.k); inp.value=v==null?"":v;
+    if(inp.dataset.bound) return; inp.dataset.bound="1";
+    inp.addEventListener("input",()=>{ setPath(inp.dataset.k,inp.value); persist(); recalc(); });
+  });
+}
+
+/* ---------- 3. EXPENSES (personal trainer) ---------- */
+const EXP=[
+  {k:"equip",t:"ציוד אימון",s:"משקולות, גומיות, TRX, מזרנים, שעון דופק לעבודה",pct:100},
+  {k:"course",t:"השתלמויות וקורסים",s:"רק השתלמות במקצוע שכבר יש לך. קורס למקצוע חדש לא מוכר",pct:100},
+  {k:"ins",t:"ביטוח אחריות מקצועית",s:"ביטוח למאמן אישי",pct:100},
+  {k:"rent",t:"שכירות מקום לאימונים",s:"תשלום לסטודיו/חדר כושר על שימוש במקום",pct:100},
+  {k:"mkt",t:"פרסום ושיווק",s:"מודעות, קידום ממומן, כרטיסי ביקור, אתר",pct:100},
+  {k:"soft",t:"תוכנות ואפליקציות לעסק",s:"הפקת קבלות, ניהול מתאמנים, אפליקציית תוכניות",pct:100},
+  {k:"bank",t:"עמלות",s:"עמלות סליקה, ביט עסקי, חשבון עסקי",pct:100},
+  {k:"books",t:"ספרות מקצועית ומנויים",s:"ספרים, איגוד מקצועי",pct:100},
+  {k:"phone",t:"טלפון נייד",s:"מוכר עד 50%, ולא יותר מ־1,200 ₪ בשנה",pct:50,cap:1200},
+  {k:"net",t:"אינטרנט בבית",s:"רק החלק שמשמש את העסק. ברירת מחדל 25%",pct:25},
+  {k:"car",t:"רכב: דלק, ביטוח, טיפולים, רישיון",s:"נסיעות לאימונים אישיים. נסיעה לעבודה כשכיר לא נחשבת. מקובל 45%",pct:45},
+  {k:"cloth",t:"ביגוד ונעליים",s:"בדרך כלל לא מוכר (גם בגדי ספורט). רק ביגוד ממותג עם לוגו העסק",pct:0},
+  {k:"other",t:"אחר",s:"הוצאה אחרת של העסק עם קבלה",pct:100}
+];
+function expRows(){ return EXP.map(e=>{ const r=S.exp[e.k]||{}; const amt=num(r.a), pct=r.p!=null&&r.p!==""?num(r.p):e.pct; let rec=amt*pct/100; if(e.cap) rec=Math.min(rec,e.cap); return {e,amt,pct,rec}; }); }
+function expTotal(){ return expRows().reduce((a,x)=>a+x.rec,0); }
+function renderExp(){
+  $("expBox").innerHTML=`<div class="gh"><h2>הוצאות העסק בשנה</h2><span class="small muted">סכום · אחוז מוכר</span></div>`+expRows().map(({e,amt,pct,rec})=>`<div class="ex${pct===0?" no":""}"><div class="t"><b>${e.t}</b><span>${e.s}</span></div>
+    <input inputmode="decimal" data-x="${e.k}" data-f="a" value="${esc((S.exp[e.k]||{}).a||"")}" placeholder="0 ₪" aria-label="${e.t}: סכום">
+    <div class="pct"><input inputmode="decimal" data-x="${e.k}" data-f="p" value="${pct}" aria-label="${e.t}: אחוז מוכר"><span>%</span></div>
+    ${amt?`<div class="rec">מוכר: <b class="num">${fmt(rec)} ₪</b>${e.cap&&amt*pct/100>e.cap?" (הגיע לתקרה)":""}</div>`:""}</div>`).join("")
+    +`<div class="gh" style="border-top:2px solid var(--line);padding-top:10px"><b>סה"כ הוצאות מוכרות</b><b class="num">${fmt(expTotal())} ₪</b></div>
+    <p class="small muted">ציוד שעולה יותר מכמה אלפי שקלים (למשל מכשיר גדול) לא נכנס בבת אחת אלא בפחת, אחוז כל שנה. במקרה כזה לוודא בהוראות.</p>`;
+  $("expBox").querySelectorAll("[data-x]").forEach(inp=>inp.addEventListener("change",()=>{ const k=inp.dataset.x; S.exp[k]=Object.assign({},S.exp[k]); S.exp[k][inp.dataset.f]=inp.value; persist(); renderExp(); recalc(); }));
+  renderZair();
+}
+function renderZair(){
+  const T=num(S.biz.turnover), flat=T*0.3, act=expTotal()+niDed();
+  const better=flat>act?"flat":"act";
+  $("zairBox").innerHTML=`<h2>30% קבוע או הוצאות אמיתיות?</h2>
+    <p class="small">מי שמוכר כ<b>"עסק זעיר"</b> (מחזור עד תקרת עוסק פטור, בלי עובדים, הכנסה מעבודה אישית) יכול לנכות <b>30% מהמחזור</b> בלי להוכיח הוצאות. ה־30% באים <b>במקום</b> ההוצאות וגם במקום ניכוי הביטוח הלאומי.</p>
+    ${T?`<div class="vs"><div class="${better==="flat"?"best":""}"><span class="small muted">30% מהמחזור</span><b class="big">${fmt(flat)} ₪</b></div><div class="${better==="act"?"best":""}"><span class="small muted">הוצאות + 52% מביטוח לאומי</span><b class="big">${fmt(act)} ₪</b></div></div>
+    <p class="small">${better==="flat"?`אצלך <b>30% מורידים יותר</b> מההוצאות האמיתיות (בערך ${fmt(flat-act)} ₪ פחות רווח שחייב במס).`:`אצלך <b>ההוצאות האמיתיות מורידות יותר</b>. מסלול עסק זעיר לא משתלם כרגע.`}</p>`:`<p class="small muted">ממלאים מחזור בלשונית הכנסות כדי לראות השוואה.</p>`}
+    <p class="small muted">ההכרה כעסק זעיר נעשית מראש, בתחילת שנת המס, באזור האישי ברשות המסים. מי שלא נרשם מגיש דוח רגיל עם הוצאות אמיתיות. מי שיוצא מהמסלול לא יכול לחזור אליו בשנתיים שאחרי. ${S.me.zair==="yes"?"<b>סימנת שאתה רשום כעסק זעיר, אז החישוב בתוצאה משתמש ב־30%.</b>":""}</p>`;
+}
+
+/* ---------- 4. DEDUCTIONS ---------- */
+const DED=[
+  {k:"ni",t:"ביטוח לאומי ששילמת כעצמאי",s:"בלי מס בריאות. מהאישור השנתי של ביטוח לאומי. 52% מזה מוכר כהוצאה",f:"030"},
+  {k:"pen",t:"הפקדה לפנסיה כעצמאי",s:"מה שהפקדת בעצמך (לא דרך תלוש). חובה לעצמאי, ומוריד מס",f:"135 / 268"},
+  {k:"hisht",t:"הפקדה לקרן השתלמות כעצמאי",s:"מוכר עד 4.5% מהרווח מהעסק",f:"136"},
+  {k:"life",t:"ביטוח חיים פרטי",s:"פוליסה שאתה משלם בעצמך (גם ביטוח חיים למשכנתא). זיכוי 25%",f:"036"},
+  {k:"don",t:"תרומות לעמותות מוכרות",s:"רק עם קבלה לפי סעיף 46. זיכוי 35% מעל כ־200 ₪ בשנה",f:"037",unsure:true}
+];
+function renderDed(){
+  $("dedBox").innerHTML=DED.map(d=>`<label class="f"><span style="color:var(--ink);font-weight:600">${d.t}</span><span>${d.s}</span><span class="fld">שדה ${d.f}${d.unsure?" (לוודא)":""}</span><input class="n" inputmode="decimal" data-k="ded.${d.k}" placeholder="0"></label>`).join("")
+    +`<p class="small muted">אם לא הפקדת לפנסיה כעצמאי: מאז 2017 עצמאי <b>חייב</b> להפקיד אחוז מהרווח מהעסק. ההפקדה גם מורידה מס, אז לעיתים קרובות היא כמעט "חינם".</p>`;
+  bindPaths($("dedBox"));
+}
+
+/* ---------- calculation ---------- */
+const sum=(a,f)=>a.reduce((x,y)=>x+num(f(y)),0);
+function niDed(){ return num(S.ded.ni)*0.52; }
+function bracketTax(t,br){ let tax=0, lo=0; for(const [hi,r] of br){ if(t<=lo) break; tax+=(Math.min(t,hi)-lo)*r; lo=hi; } return tax; }
+function monthsInYear(fromDate,months,year){ // count months of [fromDate+1 month, +months) inside the year
+  if(!fromDate) return 0; const d=new Date(fromDate); if(isNaN(d)) return 0;
+  let n=0; for(let i=1;i<=months;i++){ const y=d.getFullYear()+Math.floor((d.getMonth()+i)/12); if(y===year) n++; } return n;
+}
+function points(){
+  const me=S.me, y=S.year, pts=[];
+  pts.push([me.sex==="f"?"בסיס (תושבת)":"בסיס (תושב)",me.sex==="f"?2.75:2.25]);
+  if(me.soldier==="yes"){ const m=monthsInYear(me.relDate,36,y), perY=me.relLong==="short"?1:2; if(m) pts.push([`שחרור משירות (${m} חודשים בשנה)`,perY*m/12]); }
+  if(me.degree&&me.degree!=="no"&&me.degree!=="prof"){ const dy=num(me.degYear); if(dy&&dy+1===y) pts.push([me.degree==="ma"?"תואר שני":"תואר ראשון",me.degree==="ma"?0.5:1]); }
+  return pts;
+}
+function compute(){
+  const p=P(), r={};
+  r.sal=sum(S.emps,e=>e.gross); r.salTax=sum(S.emps,e=>e.tax); r.empPens=sum(S.emps,e=>e.pens);
+  r.turn=num(S.biz.turnover);
+  r.flat=S.me.zair==="yes";
+  r.exp=r.flat?r.turn*0.3:expTotal();
+  r.bizProfit=Math.max(0,r.turn-r.exp);
+  r.ni=r.flat?0:niDed();
+  const pen=num(S.ded.pen), base=Math.max(0,r.bizProfit-r.ni);
+  r.penDed=Math.min(pen,base*0.11); r.penCr=Math.min(pen-r.penDed,base*0.055)*0.35;
+  r.hishtDed=Math.min(num(S.ded.hisht),base*0.045,p.hisht);
+  r.taxable=Math.max(0,r.sal+r.bizProfit-r.ni-r.penDed-r.hishtDed);
+  r.grossTax=bracketTax(r.taxable,p.br);
+  r.pts=points(); r.ptsN=r.pts.reduce((a,x)=>a+x[1],0); r.ptsCr=r.ptsN*p.cp;
+  r.empPensCr=Math.min(r.empPens,r.sal*0.07)*0.35;
+  r.lifeCr=num(S.ded.life)*0.25;
+  const don=num(S.ded.don); r.donCr=don>=p.don?don*0.35:0;
+  r.credits=r.ptsCr+r.penCr+r.empPensCr+r.lifeCr+r.donCr;
+  r.taxDue=Math.max(0,r.grossTax-r.credits);
+  r.wh=sum(S.wh,w=>w.amt); r.adv=num(S.advances);
+  r.paid=r.salTax+r.wh+r.adv;
+  r.diff=r.paid-r.taxDue;
+  r.has=r.sal>0||r.turn>0;
+  return r;
+}
+
+/* ---------- 5. RESULT ---------- */
+function flags(r){
+  const me=S.me, p=P(), f=[];
+  if(r.turn>p.patur) f.push(["bad","!",`המחזור (${fmt(r.turn)} ₪) עבר את תקרת עוסק פטור (${fmt(p.patur)} ₪). צריך להודיע למע"מ ולעבור לעוסק מורשה. זה קודם לכל דבר אחר.`]);
+  else if(r.turn>p.patur*0.85) f.push(["warn","!",`המחזור קרוב לתקרת עוסק פטור (${fmt(p.patur)} ₪). כדאי לעקוב חודש בחודש.`]);
+  if(me.gym==="invoice") f.push(["bad","!","חדר הכושר דורש חשבונית מס, ועוסק פטור לא יכול להוציא אותה. לסדר את זה מולם (תלוש או מעבר למורשה) לפני שממשיכים."]);
+  if(me.gym==="?"||!me.gym) f.push(["warn","?","לברר איך חדר הכושר משלם לך: תלוש (מעסיק, טופס 106) או קבלה (הכנסת העסק). זה משנה איפה הכסף נכנס בדוח."]);
+  if(me.gym==="receipt"&&!S.wh.length) f.push(["money","₪","חדר הכושר משלם לך נגד קבלה. לשאול אותם אם הורידו מס במקור ולבקש טופס 857. אם הורידו, זה כסף שחוזר אליך."]);
+  if((me.multi==="yes"||S.emps.length>1)) f.push(["money","₪","עבדת אצל כמה מעסיקים. בלי תיאום מס, כל מעסיק נוסף מוריד מס גבוה. הדוח השנתי מחזיר את העודף. חשוב להכניס את כל טופסי ה־106."]);
+  if(me.soldier==="yes"&&!me.relDate) f.push(["money","₪","סימנת שחרור משירות. הכנס תאריך שחרור בלשונית 1 כדי שהנקודות ייכנסו לחישוב, ובדוח עצמו לסמן ולצרף תעודת שחרור."]);
+  if(me.soldier==="yes"&&me.relDate&&!r.pts.some(x=>x[0].startsWith("שחרור"))) f.push(["info","i","לפי תאריך השחרור, בשנה הזו כבר לא מגיעות נקודות שחרור. כדאי לבדוק בשנים קודמות (לשונית 8)."]);
+  if(me.degree&&me.degree!=="no"&&me.degree!=="prof"&&!r.pts.some(x=>x[0].startsWith("תואר"))) f.push(["info","i",`נקודת התואר מגיעה בשנה שאחרי הסיום${me.degYear?` (כלומר ${num(me.degYear)+1})`:""}. אם בשנה ההיא לא ביקשת אותה, אפשר לתקן את הדוח של אותה שנה.`]);
+  if(!r.flat&&r.turn>0&&!num(S.ded.ni)) f.push(["money","₪","לא מילאת ביטוח לאומי ששילמת כעצמאי. 52% ממנו מוריד מס (שדה 030). שוכחים את זה הרבה."]);
+  if(r.turn>0&&!num(S.ded.pen)) f.push(["warn","!","אין הפקדה לפנסיה כעצמאי. זו חובה לעצמאי, והיא גם מורידה מס. כדאי לפתוח הפקדה עצמאית (אפשר באותה קרן של המשכורת)."]);
+  if(!r.flat&&r.turn>0&&expTotal()===0) f.push(["money","₪","לא מילאת הוצאות לעסק. כמעט לכל מאמן יש: ציוד, השתלמות, חלק מהטלפון, חלק מהרכב. כל 100 ₪ הוצאה מוכרת חוסכים 10–20 ₪ מס."]);
+  if(!r.flat&&r.turn>0&&r.turn*0.3>expTotal()+niDed()) f.push(["info","i",`בשנה הזו 30% קבוע היה מוריד יותר מההוצאות שלך. אפשר לשקול רישום כעסק זעיר לשנה הבאה, בתחילת השנה (לשונית 3).`]);
+  if(r.turn>0&&!S.emps.length) f.push(["warn","?","לא הוספת אף טופס 106. אם עבדת גם כשכיר, בלי 106 החישוב לא נכון."]);
+  const missing=S.emps.filter(e=>num(e.gross)>0&&!num(e.tax)).length;
+  if(missing) f.push(["info","i","יש מעסיק עם הכנסה ובלי מס שנוכה. זה תקין אם ההכנסה נמוכה, אבל שווה לבדוק שהעתקת את שדה 042."]);
+  if(me.kids==="yes") f.push(["money","₪","יש לך ילדים. נקודות הזיכוי עליהם לא מחושבות כאן, אז ההחזר האמיתי יכול להיות גבוה יותר."]);
+  if(me.yishuv==="yes"||me.yishuv==="?") f.push(["money","₪","יישוב מזכה נותן הנחה במס שלא מחושבת כאן. בדוח עצמו מסמנים את היישוב."]);
+  f.push(["info","i",`מועד הגשה: ${P().file}.`]);
+  return f;
+}
+function renderRes(){
+  const r=compute();
+  const hero=$("resHero");
+  if(!r.has){ hero.innerHTML=`<div class="hero"><b>עוד אין מספיק נתונים</b><p class="small">ממלאים הכנסות (106 ומחזור העסק) כדי לראות הערכה.</p></div>`; }
+  else{
+    const ref=r.diff>=0;
+    hero.innerHTML=`<div class="hero ${Math.abs(r.diff)<100?"":ref?"refund":"owe"}"><span class="small">${Math.abs(r.diff)<100?"בערך מאוזן":ref?"כנראה מגיע לך החזר של בערך":"כנראה תצטרך להשלים בערך"}</span><span class="big num">${fmt(Math.abs(r.diff))} ₪</span>
+      <p class="small">שילמת כבר ${fmt(r.paid)} ₪ מס במהלך השנה. לפי החישוב, המס על כל ההכנסות שלך הוא ${fmt(r.taxDue)} ₪.</p></div>`;
+  }
+  $("flags").innerHTML=flags(r).map(([c,ic,t])=>`<li class="${c}"><span class="ic">${ic}</span><span>${t}</span></li>`).join("");
+  const L=(t,v,cls)=>`<span class="${cls||""}">${t}</span><span class="v ${cls||""}">${v}</span>`;
+  $("calc").innerHTML=
+    L("משכורות (סה\"כ 106)",fmt(r.sal))+
+    L("מחזור העסק",fmt(r.turn))+
+    L(r.flat?"פחות 30% קבוע (עסק זעיר)":"פחות הוצאות מוכרות","−"+fmt(r.exp),"ind")+
+    L("רווח מהעסק",fmt(r.bizProfit))+
+    (r.ni?L("פחות 52% מביטוח לאומי","−"+fmt(r.ni),"ind"):"")+
+    (r.penDed?L("פחות פנסיה עצמאית (ניכוי)","−"+fmt(r.penDed),"ind"):"")+
+    (r.hishtDed?L("פחות קרן השתלמות","−"+fmt(r.hishtDed),"ind"):"")+
+    L("הכנסה חייבת במס",fmt(r.taxable),"tot")+
+    L("מס לפי מדרגות "+S.year,fmt(r.grossTax))+
+    r.pts.map(([n,v])=>L(`נקודות זיכוי: ${n}, ${+v.toFixed(2)}`,"−"+fmt(v*P().cp),"ind")).join("")+
+    (r.empPensCr?L("זיכוי פנסיה מהמשכורת","−"+fmt(r.empPensCr),"ind"):"")+
+    (r.penCr?L("זיכוי פנסיה עצמאית","−"+fmt(r.penCr),"ind"):"")+
+    (r.lifeCr?L("זיכוי ביטוח חיים","−"+fmt(r.lifeCr),"ind"):"")+
+    (r.donCr?L("זיכוי תרומות","−"+fmt(r.donCr),"ind"):"")+
+    L("מס שמגיע ממך",fmt(r.taxDue),"tot")+
+    L("מס שנוכה במשכורות (042)",fmt(r.salTax),"ind")+
+    (r.wh?L("מס שלקוחות ניכו (040)",fmt(r.wh),"ind"):"")+
+    (r.adv?L("מקדמות ששילמת",fmt(r.adv),"ind"):"")+
+    L(r.diff>=0?"החזר משוער":"השלמה משוערת",fmt(Math.abs(r.diff)),"tot");
+}
+
+/* ---------- 6. FORM MAP ---------- */
+function renderForm(){
+  const r=compute(), me=S.me;
+  const row=(no,t,s,v,o)=>{ o=o||{}; const has=typeof v==="number"?Math.round(v)!==0:!!v;
+    return `<div class="frow${has||o.keep?"":" dim"}"><span class="fno${o.txt?" txt":""}">${no}</span><div class="ft"><b>${t}</b>${s?`<span>${s}</span>`:""}${o.unsure?`<span class="unsure">לוודא את מספר השדה בטופס של ${S.year}</span>`:""}</div>
+      <div class="fv">${typeof v==="number"?(has?`<span class="val">${Math.round(v)}</span><button type="button" class="cp" data-cp="${Math.round(v)}">העתק</button>`:`<span class="val zero">ריק</span>`):`<span class="small">${v||"<span class='muted'>—</span>"}</span>`}</div></div>`; };
+  const part=(title,sub,rows)=>`<div class="box"><div class="gh"><h3>${title}</h3>${sub?`<span class="small muted">${sub}</span>`:""}</div><div class="fpart">${rows}</div></div>`;
+  let h="";
+  h+=part("פרטים אישיים ונקודות זיכוי","עמוד הפתיחה של הדוח",
+    row("פרטים","פרטים אישיים, כתובת, מצב משפחתי","המערכת ממלאת לבד. בודקים שהכתובת נכונה.","",{txt:true,keep:true})+
+    (me.soldier==="yes"?row("זיכוי","חייל משוחרר: לסמן ולהקליד תאריך שחרור","מצרפים תעודת שחרור (צילום)",me.relDate?new Date(me.relDate).toLocaleDateString("he-IL"):"להשלים תאריך",{txt:true,keep:true}):"")+
+    (me.degree&&me.degree!=="no"?row("זיכוי","תואר / תעודת מקצוע: לסמן ולהקליד שנת סיום","מצרפים אישור זכאות לתואר",me.degYear||"להשלים שנה",{txt:true,keep:true}):"")+
+    (me.yishuv==="yes"?row("זיכוי","יישוב מזכה: לבחור את היישוב מהרשימה","",'כן',{txt:true,keep:true}):""));
+  h+=part("הכנסות","חלק ההכנסות בטופס 1301",
+    row("150","הכנסה מעסק או משלח יד","הרווח מהעסק: מחזור פחות הוצאות (מתוך טופס 1320)",r.bizProfit)+
+    row("158","הכנסה ממשכורת","סכום שדה 158/172 מכל טופסי 106",r.sal));
+  if(!r.flat) h+=part("טופס 1320: רווח והפסד של העסק","נספח שמצרפים לדוח. במקוון יש מסך נפרד",
+    row("מחזור","הכנסות מהעסק (מחזור)","",r.turn,{txt:true})+
+    expRows().filter(x=>x.rec>0).map(x=>row("הוצאה",x.e.t,x.pct<100?`${fmt(x.amt)} ₪ × ${x.pct}%${x.e.cap?" (עד "+fmt(x.e.cap)+")":""}`:"",x.rec,{txt:true})).join("")+
+    row("רווח","רווח (עובר לשדה 150)","",r.bizProfit,{txt:true}));
+  else h+=part("עסק זעיר: ניכוי 30%","","" +row("30%","ניכוי בשיעור קבוע","30% מהמחזור. לבחור באפשרות הזו במסך העסק",r.exp,{txt:true,unsure:true}));
+  h+=part("ניכויים","מורידים את ההכנסה שחייבת במס",
+    (!r.flat?row("030","דמי ביטוח לאומי (לא מעבודה)","מקלידים את מה ששילמת, בלי מס בריאות. המערכת מחשבת 52%",num(S.ded.ni)):"")+
+    row("135","פנסיה כעמית עצמאי","הסכום מהאישור השנתי של הקרן. מה שלא נכנס כאן, בשדה 268",num(S.ded.pen))+
+    row("136","קרן השתלמות כעצמאי","",num(S.ded.hisht)));
+  h+=part("זיכויים","מורידים ישירות את המס",
+    row("036","ביטוח חיים","",num(S.ded.life))+
+    row("037","תרומות (סעיף 46)","סה\"כ הקבלות",num(S.ded.don),{unsure:true})+
+    row("086/045","הפקדת עובד לפנסיה מהמשכורת","בדרך כלל ממולא לבד מה־106. רק לבדוק",r.empPens));
+  h+=part("מס שכבר שולם","",
+    row("042","מס שנוכה ממשכורת","סכום שדה 042 מכל טופסי 106",r.salTax)+
+    row("040","מס שנוכה במקור מהכנסות אחרות","סכום כל טופסי 857",r.wh)+
+    row("מקדמות","מקדמות ששילמת","המערכת מושכת לבד מהחשבון שלך. רק לבדוק",r.adv,{txt:true}));
+  $("formMap").innerHTML=h;
+  $("formMap").querySelectorAll("[data-cp]").forEach(b=>b.addEventListener("click",()=>{ (navigator.clipboard?navigator.clipboard.writeText(b.dataset.cp):Promise.reject()).then(()=>toast("הועתק: "+b.dataset.cp)).catch(()=>toast(b.dataset.cp)); }));
+}
+
+/* ---------- 7. DOCS ---------- */
+function docList(){
+  const me=S.me, r=compute(), L=[];
+  L.push(["106","טופס 106 מכל מעסיק",`${S.emps.length?S.emps.map(e=>e.name||"מעסיק").join(", "):"מכל מקום שעבדת בו בתלוש"}. מגיע עד סוף מרץ.`]);
+  L.push(["rcpt","העתקי כל הקבלות שהוצאת","הסכום שלהם = המחזור. מתוכנת הקבלות אפשר להוציא דוח שנתי."]);
+  L.push(["vat","הצהרת המחזור למע\"מ","שהגשת עד 31.1. המחזור בדוח צריך להיות זהה."]);
+  if(S.me.zair!=="yes") L.push(["exp","קבלות על הוצאות העסק","לפי הקטגוריות בלשונית 3."]);
+  L.push(["857","טופס 857 מכל לקוח שהוריד מס","חדר כושר, סטודיו או חברה ששילמו לך נגד קבלה."]);
+  L.push(["bl","אישור שנתי מביטוח לאומי","על דמי ביטוח ששילמת כעצמאי. באתר ביטוח לאומי, באזור האישי."]);
+  L.push(["pen","אישור שנתי ממס מקרן הפנסיה","וגם מקרן ההשתלמות, אם הפקדת כעצמאי. באתר של הקרן."]);
+  if(me.soldier==="yes") L.push(["army","תעודת שחרור","צילום. לנקודות הזיכוי."]);
+  if(me.degree&&me.degree!=="no") L.push(["deg","אישור זכאות לתואר / תעודה","עם תאריך הסיום."]);
+  L.push(["life","אישור שנתי על ביטוח חיים","אם יש לך פוליסה פרטית."]);
+  L.push(["don","קבלות על תרומות","רק אם כתוב עליהן סעיף 46."]);
+  L.push(["867","טופס 867 מהבנק","אם יש פיקדון או השקעות. אם אין, לא צריך."]);
+  L.push(["bank","פרטי חשבון בנק","כדי שההחזר ייכנס ישר לחשבון."]);
+  return L;
+}
+function renderDocs(){
+  const L=docList(), done=L.filter(d=>S.docs[d[0]]).length;
+  $("docCount").textContent=`${done} מתוך ${L.length}`;
+  $("docBar").style.width=(L.length?done/L.length*100:0)+"%";
+  $("docList").innerHTML=L.map(([k,t,s])=>`<label class="ck${S.docs[k]?" done":""}"><input type="checkbox" data-doc="${k}"${S.docs[k]?" checked":""}><div><b>${t}</b><span>${s}</span></div></label>`).join("");
+  $("docList").querySelectorAll("[data-doc]").forEach(c=>c.addEventListener("change",()=>{ S.docs[c.dataset.doc]=c.checked; persist(); renderDocs(); }));
+}
+
+/* ---------- 8. PAST YEARS ---------- */
+const PAST_OPT=[["filed","הגשתי לבד"],["cpa","הגיש מישהו אחר"],["no","לא הגשתי"],["?","לא זוכר"]];
+function renderPast(){
+  const yrs=[]; for(let y=2025;y>=2020;y--) yrs.push(y);
+  $("pastBox").innerHTML=`<h2>מה קרה בכל שנה</h2>`+yrs.map(y=>{
+    const v=PAST[y]||"";
+    const a={filed:`אפשר להיכנס לדוח של ${y} באזור האישי ולבדוק מה מילאת. אם חסר משהו שמגיע לך (הוצאות, נקודות, 857, ביטוח לאומי), מגישים <b>דוח מתקן</b> לאותה שנה, גם במקוון. כדאי לבדוק את זה קודם לשנים הישנות, יש מגבלת זמן.`,
+      cpa:`כדאי לבקש עותק של הדוח שהוגש, ולעבור עליו מול הרשימה בלשונית 5.`,
+      no:y>=2020?`אם היה לך עסק פתוח באותה שנה, היית חייב להגיש. כדאי להגיש עכשיו (מקוון, לבחור את שנת ${y}), עדיף לפני שיגיע מכתב. אם הגשה תביא לך החזר, אפשר לקבל אותו עד 6 שנים אחורה.`:"",
+      "?":`נכנסים לאזור האישי ברשות המסים ובודקים ב"מצב חשבון" אם יש דוח לשנת ${y}.`}[v]||"";
+    return `<div class="yr"><span class="y">${y}</span><div class="q"><div class="seg">${PAST_OPT.map(([k,l])=>`<button type="button" data-py="${y}" data-pv="${k}" aria-pressed="${v===k}">${l}</button>`).join("")}</div>${a?`<p class="ans${v==="no"?" w":""}">${a}</p>`:""}
+      ${PARAMS[y]&&y!==S.year?`<button type="button" class="btn2" style="align-self:flex-start" data-goyear="${y}">למלא את ${y} באפליקציה</button>`:""}</div></div>`;
+  }).join("");
+  $("pastBox").querySelectorAll("[data-py]").forEach(b=>b.addEventListener("click",()=>{ PAST[b.dataset.py]=b.dataset.pv; persist(); renderPast(); }));
+  $("pastBox").querySelectorAll("[data-goyear]").forEach(b=>b.addEventListener("click",()=>{ $("yearSel").value=b.dataset.goyear; loadYear(+b.dataset.goyear).then(()=>{ go("me"); }); }));
+}
+
+/* ---------- shell ---------- */
+function recalc(){
+  const r=compute();
+  $("rbarS").textContent=`הערכה לשנת ${S.year}: ${!r.has?"ממלאים נתונים":r.diff>=0?"החזר":"השלמה"}`;
+  $("rbarV").textContent=r.has?`${r.diff>=0?"+":"−"}${fmt(Math.abs(r.diff))} ₪`:"—";
+  if(tab==="res") renderRes();
+  if(tab==="form") renderForm();
+  if(tab==="exp") renderZair();
+  if(tab==="docs") renderDocs();
+}
+function go(t){
+  tab=t;
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  document.querySelectorAll("section.panel").forEach(s=>s.hidden=s.id!=="p-"+t);
+  ({me:renderMe,inc:renderInc,exp:renderExp,ded:renderDed,res:renderRes,form:renderForm,docs:renderDocs,past:renderPast})[t]();
+  $("rbar").hidden=t==="res";
+  window.scrollTo({top:0});
+  try{ localStorage.setItem("money_tax_tab",t); }catch(e){}
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-go]"); if(b) go(b.dataset.go); });
+function renderAll(){
+  const p=P();
+  $("yearNote").innerHTML=S.year===2026?`<div class="note small">שנת המס <b>2026</b>: הדוח מוגש ב־2027. אפשר כבר עכשיו למלא מה שידוע ולעדכן כשמגיעים ה־106 (סוף מרץ).</div>`
+    :`<div class="warnbox small">שנת המס <b>${S.year}</b>. ${p.file}.</div>`;
+  document.querySelectorAll(".yN").forEach(e=>e.textContent=S.year);
+  MM=null; loadMyMoney();
+  go(tab); recalc();
+}
+$("yearSel").innerHTML=YEARS.map(y=>`<option value="${y}">שנת מס ${y}</option>`).join("");
+$("yearSel").addEventListener("change",()=>loadYear(+$("yearSel").value));
+(function start(){
+  let y=2026; try{ y=+localStorage.getItem("money_tax_year")||2026; tab=localStorage.getItem("money_tax_tab")||"me"; }catch(e){}
+  if(!PARAMS[y]) y=2026; if(!document.getElementById("p-"+tab)) tab="me";
+  $("yearSel").value=y;
+  PAST=loadLocal().past||{};
+  loadYear(y);
+  initCloud();
+})();
+})();
+</script>
+</body>
+</html>
