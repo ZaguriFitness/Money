@@ -474,7 +474,7 @@ function renderMe(){
     return `<div class="q"><b>${q.t}</b><div class="seg">${q.o.map(([val,l])=>`<button type="button" data-q="${q.k}" data-v="${val}" aria-pressed="${v===val}">${l}</button>`).join("")}</div>${extra}${ans?`<p class="ans${cls}">${ans}</p>`:""}</div>`;
   }).join("");
   $("meBox").innerHTML=h;
-  $("meBox").querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{ S.me[b.dataset.q]=b.dataset.v; persist(); renderMe(); recalc(); }));
+  $("meBox").querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>{ if(S.me[b.dataset.q]===b.dataset.v) delete S.me[b.dataset.q]; else S.me[b.dataset.q]=b.dataset.v; persist(); renderMe(); recalc(); }));
   $("meBox").querySelectorAll("[data-me]").forEach(i=>i.addEventListener("change",()=>{ S.me[i.dataset.me]=i.value; persist(); renderMe(); recalc(); }));
 }
 
@@ -738,7 +738,7 @@ function renderPast(){
     return `<div class="yr"><span class="y">${y}</span><div class="q"><div class="seg">${PAST_OPT.map(([k,l])=>`<button type="button" data-py="${y}" data-pv="${k}" aria-pressed="${v===k}">${l}</button>`).join("")}</div>${a?`<p class="ans${v==="no"?" w":""}">${a}</p>`:""}
       ${PARAMS[y]&&y!==S.year?`<button type="button" class="btn2" style="align-self:flex-start" data-goyear="${y}">למלא את ${y} באפליקציה</button>`:""}</div></div>`;
   }).join("");
-  $("pastBox").querySelectorAll("[data-py]").forEach(b=>b.addEventListener("click",()=>{ PAST[b.dataset.py]=b.dataset.pv; persist(); renderPast(); }));
+  $("pastBox").querySelectorAll("[data-py]").forEach(b=>b.addEventListener("click",()=>{ if(PAST[b.dataset.py]===b.dataset.pv) delete PAST[b.dataset.py]; else PAST[b.dataset.py]=b.dataset.pv; persist(); renderPast(); }));
   $("pastBox").querySelectorAll("[data-goyear]").forEach(b=>b.addEventListener("click",()=>{ $("yearSel").value=b.dataset.goyear; loadYear(+b.dataset.goyear).then(()=>{ go("me"); }); }));
 }
 
