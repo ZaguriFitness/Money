@@ -1106,7 +1106,7 @@ function renderOwn(){
   const items=list.map((x,i)=>`<div class="own-item"><span class="num own-a">${fmt2(x.a)} ₪</span><span class="own-n">${esc(x.n||"")}</span><span class="small muted num">${x.d?`${Number(x.d.slice(8,10))}.${Number(x.d.slice(5,7))}`:""}</span><button type="button" class="cash-tg${x.cash?" on":""}" data-i="${i}" aria-pressed="${!!x.cash}">${x.cash?"מזומן":"לא מזומן"}</button><button type="button" class="logdel${ownArmed===i?" armed":""}" data-i="${i}" aria-label="להסיר">${ownArmed===i?"להסיר?":"×"}</button></div>`).join("");
   const now=new Date(), dd=(now.getFullYear()===YEAR&&now.getMonth()+1===cur)?now.getDate():1;
   box.innerHTML=`<div class="lg lg-own">
-    <button type="button" class="lg-h own-toggle" aria-expanded="${ownOpen}"><span class="caret" aria-hidden="true">${ownOpen?"▾":"‹"}</span><b>אימונים אישיים</b><span class="small muted">${list.length?(()=>{ const c=list.filter(x=>x.cash).reduce((a,x)=>a+x.a,0); return (list.length===1?"תשלום אחד":list.length+" תשלומים")+(c?` · מזומן ${fmt2(c)} ₪ · לא מזומן ${fmt2(tot-c)} ₪`:""); })():"ישירות אליי"}</span><span class="lg-sum num">${fmt2(tot)} ₪</span></button>
+    <button type="button" class="lg-h own-toggle" aria-expanded="${ownOpen}"><span class="caret" aria-hidden="true">${ownOpen?"▾":"‹"}</span><b>אימונים אישיים</b><span class="small muted">${list.length?(list.length===1?"תשלום אחד":list.length+" תשלומים"):"ישירות אליי"}</span><span class="lg-sum num">${fmt2(tot)} ₪</span></button>
     <div class="own-body"${ownOpen?"":" hidden"}>
       ${items||`<p class="muted small" style="margin:8px 2px">עוד לא נרשם כלום החודש.</p>`}
       <form class="own-form">
