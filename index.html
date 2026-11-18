@@ -299,6 +299,10 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
 .simple th{color:var(--muted);font-weight:600;font-size:13px}
 .meter{height:14px;border-radius:7px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
 .meter span{display:block;height:100%;background:var(--accent)}
+.todo{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:10px}
+.todo li>b{display:block;color:var(--accent)}
+.todo li span{display:block;font-size:15px}
+.todo a{color:var(--accent)}
 .kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;font-size:15px}
 .kv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:left}
 
@@ -385,20 +389,33 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
   <section class="paturv" id="paturSec">
     <div class="box">
       <a href="report.html" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--accent);color:var(--bg);border-radius:10px;padding:12px 14px;text-decoration:none;font-weight:600">הדוח השנתי שלי: מה למלא, ואם מגיע לי החזר<span aria-hidden="true">←</span></a>
-      <h2>עוסק פטור בחמש שורות</h2>
-      <ul class="clean">
-        <li>לא גובה מע"מ מלקוחות, ולא מקבל החזר מע"מ על הוצאות.</li>
-        <li>מותר לך מחזור של עד <b>122,833 ₪ בשנה</b> (בערך 10,236 ₪ בחודש בממוצע) (2026). מחזור = כל מה שנכנס מהעסק, לפני הוצאות.</li>
-        <li>על כל תשלום שמקבלים מוציאים <b>קבלה</b> מיד. אסור להוציא "חשבונית מס".</li>
-        <li>פעם בשנה: הצהרת מחזור למע"מ (עד 31.1) ודוח שנתי למס הכנסה.</li>
-        <li>הפטור הוא רק ממע"מ. מס הכנסה, ביטוח לאומי ופנסיה חלים כרגיל.</li>
-      </ul>
     </div>
 
     <div class="box">
-      <div class="group-h"><h3>כמה נשאר עד התקרה ב־2026</h3><span class="small muted num" id="ceilTxt"></span></div>
+      <div class="group-h"><h2>המחזור שלך ב־2026</h2><span class="small muted num" id="ceilTxt"></span></div>
       <div class="meter"><span id="ceilBar" style="width:0%"></span></div>
+      <div class="kv" id="ceilKv"></div>
       <p class="small muted" id="ceilNote"></p>
+    </div>
+
+    <div class="box">
+      <h2>מי אתה מבחינת המס</h2>
+      <ul class="clean" id="whoList"></ul>
+    </div>
+
+    <div class="box">
+      <h2>מה צריך לעשות, ומתי</h2>
+      <ol class="todo">
+        <li><b>כל פעם שמקבלים כסף מהעסק</b><span>מוציאים <b>קבלה</b> (לא "חשבונית מס"). כל הקבלות של השנה = המחזור.</span></li>
+        <li><b>כל חודש</b><span>ביטוח לאומי כעצמאי: משלמים מקדמה לפי ההכנסה המשוערת. כשההכנסה משתנה, מעדכנים באזור האישי באתר ביטוח לאומי, כדי שלא תצטבר דרישה גדולה.</span></li>
+        <li><b>כל חודש</b><span>שומרים קבלות על הוצאות העסק (ציוד, חלק מהדלק, טלפון). הן מורידות את הרווח, ולכן גם את המס והביטוח הלאומי. כדאי גם לשים בצד 10%–15% מהכנסות העסק.</span></li>
+        <li><b>עד 31 בינואר</b><span>הצהרת מחזור למע"מ על השנה שעברה, באתר רשות המסים. זה הדיווח היחיד למע"מ. (יש שנים שבהן נותנים דחייה.)</span></li>
+        <li><b>עד סוף השנה</b><span>הפקדה לפנסיה, חובה לעצמאי, לפי הרווח מהעסק. קרן השתלמות לא חובה, אבל מורידה מס.</span></li>
+        <li><b>פעם בשנה, על השנה שעברה</b><span><b>דוח שנתי למס הכנסה</b> (טופס 1301), באתר רשות המסים. בדרך כלל עד סוף מאי, ולרוב יש דחייה. <a href="report.html">המדריך המלא בעמוד "הדוח השנתי שלי"</a>.</span></li>
+        <li><b>אחרי הדוח</b><span>ביטוח לאומי משווה את מה ששילמת לרווח האמיתי, ושולח החזר או דרישת תשלום.</span></li>
+        <li><b>אם עוברים את התקרה</b><span>מודיעים <b>מיד</b> למשרד מע"מ ועוברים לעוסק מורשה.</span></li>
+      </ol>
+      <p class="small muted">להעמקה: למטה יש פירוט של מס הכנסה, ביטוח לאומי, פנסיה ועוד.</p>
     </div>
 
     <details>
@@ -419,13 +436,12 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
           <span>גבר תושב, בסיס: 2.25 נקודות</span><span class="v">544.5 ₪ הנחה לחודש</span>
           <span>מתחת לזה בערך לא משלמים מס בכלל</span><span class="v">כ־5,450 ₪ רווח לחודש</span>
         </div>
-        <p class="small muted" data-t="tax1"></p>
         <p data-t="tax2"></p>
       </div>
     </details>
 
     <details>
-      <summary><span><span class="h">ביטוח לאומי ובריאות</span><br><span class="s">למה יורד לך 266 ₪ כל חודש</span></span></summary>
+      <summary><span><span class="h">ביטוח לאומי ובריאות</span><br><span class="s">כמה משלמים על העסק</span></span></summary>
       <div class="body">
         <div class="scroll" style="border:0"><table class="simple">
           <tr><th>חלק מהרווח החודשי מהעסק</th><th>לאומי</th><th>בריאות</th><th>ביחד</th></tr>
@@ -433,12 +449,12 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
           <tr><td>7,703 עד 51,910 ₪</td><td>12.83%</td><td>5.17%</td><td><b>18%</b></td></tr>
         </table></div>
         <ul class="clean">
-          <li data-t="blMin"></li>
+          <li><b>שכיר ועצמאי ביחד:</b> מי שהוא גם שכיר לא חייב בתשלום המינימלי כעצמאי (כ־266 ₪). משלמים לפי הרווח האמיתי מהעסק. על המשכורת המעסיק כבר משלם בתלוש.</li>
+          <li>השיעור הנמוך (7.7%) חל על 7,703 ₪ הראשונים בחודש מ<b>כל</b> ההכנסות יחד, והמשכורת "תופסת" אותו ראשונה.</li>
           <li>המקדמות נקבעות לפי ההערכה שלך לרווח. אחרי הדוח השנתי מגיעה התחשבנות: החזר או חוב.</li>
           <li>חלק מדמי הביטוח הלאומי (52%, בלי הבריאות) מוכר כהוצאה ומקטין את מס ההכנסה. בדוח: שדה 030.</li>
           <li>התשלום נותן זכויות: דמי לידה, מילואים, פגיעה בעבודה ונכות. עצמאי לא מקבל דמי אבטלה רגילים.</li>
         </ul>
-        <p class="small muted" data-t="bl2025"></p>
       </div>
     </details>
 
@@ -818,12 +834,28 @@ function renderYear(){
 }
 
 /* ---------- ceiling ---------- */
+// business turnover of a month: HIIT and EMS work, agency payouts that reached the bank, personal training, old "business" entries
+function bizTurnover(m){
+  const s=shifts[key(m)], inc=getM(m).income||{};
+  const work=s&&s.ok?s.list.filter(x=>!x.isC).reduce((a,x)=>a+x.pay,0):null;
+  const agency=PROV.reduce((a,p)=>a+(provBankFor(p,m)||0),0);
+  return {work, other:agency+ownTotal(m)+(inc.biz||0)};
+}
 function renderCeiling(){
-  let biz=0,n=0; for(let m=1;m<=12;m++){const v=(getM(m).income||{}).biz; if(typeof v==="number"){biz+=v;n++;}}
-  const CEIL=122833;
-  $("ceilTxt").textContent=fmt(biz)+" מתוך "+fmt(CEIL)+" ₪";
-  $("ceilBar").style.width=Math.min(100,biz/CEIL*100)+"%";
-  $("ceilNote").textContent=(n? "רשומים "+n+" חודשים. ":"")+(PROFILE.text.ceilNote||"נספר רק מה שרשמת בשדה \"עסק\" בלשונית החודש.");
+  const CEIL=122833, now=new Date(), last=now.getFullYear()>YEAR?12:now.getFullYear()<YEAR?0:now.getMonth()+1;
+  let tot=0, missing=[];
+  for(let m=1;m<=last;m++){ const t=bizTurnover(m); if(t.work==null&&calState!=="none") missing.push(MONTHS[m-1]); tot+=(t.work||0)+t.other; }
+  const avg=last?tot/last:0;
+  $("ceilTxt").textContent=fmt(tot)+" מתוך "+fmt(CEIL)+" ₪";
+  $("ceilBar").style.width=Math.min(100,tot/CEIL*100)+"%";
+  $("ceilKv").innerHTML=`<span>ממוצע לחודש</span><span class="v">${fmt(avg)} ₪</span>
+    <span>בקצב הזה, עד סוף השנה</span><span class="v">${fmt(avg*12)} ₪</span>
+    <span>נשאר עד התקרה</span><span class="v">${fmt(Math.max(0,CEIL-tot))} ₪</span>`;
+  $("ceilNote").textContent=`נספר: ${["HIIT","EMS"].concat(PROV.map(p=>p.name),["אימונים אישיים"]).join(", ")}. לא נספרת המשכורת מקנטרי (שם אתה שכיר). המשמרות נספרות לפי חודש העבודה.`+(missing.length?` עוד לא נקראו מהיומן: ${missing.join(", ")}.`:"");
+  if(view==="patur") for(let m=1;m<=last;m++) ensureMonth(m);
+  $("whoList").innerHTML=`<li><b>עוסק פטור</b> על: HIIT, EMS${PROV.map(p=>", "+esc(p.name)).join("")}, אימונים אישיים. מהכסף הזה אף אחד לא מנכה לך כלום: את מס ההכנסה ואת הביטוח הלאומי עליו אתה משלם בעצמך.</li>
+    <li><b>שכיר</b> בקנטרי: המעסיק מנכה מס וביטוח לאומי בתלוש, ובסוף השנה מקבלים ממנו טופס 106.</li>
+    <li>מס הכנסה מחושב על <b>הכול ביחד</b> (רווח מהעסק + משכורת), בדוח השנתי.</li>`;
 }
 
 /* ---------- checks ---------- */
@@ -1285,7 +1317,7 @@ function setView(v){
 $("kInBtn").addEventListener("click",()=>setView("in"));
 $("kOutBtn").addEventListener("click",()=>setView("out"));
 $("navMoney").addEventListener("click",()=>{ setView(moneyView); window.scrollTo({top:0}); });
-$("navPatur").addEventListener("click",()=>{ setView("patur"); window.scrollTo({top:0}); });
+$("navPatur").addEventListener("click",()=>{ setView("patur"); renderCeiling(); window.scrollTo({top:0}); });
 setView(view);
 
 function renderAll(){renderMonth();renderYear();renderCeiling();renderChecks();}
