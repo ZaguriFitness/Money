@@ -322,6 +322,9 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
 [data-t]:empty{display:none}
 .tl>[data-t]{display:contents}
 .top-h h1{white-space:nowrap}
+.mainnav{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.mainnav button{font:inherit;font-size:15px;font-weight:600;border:0;border-radius:999px;padding:9px 10px;background:transparent;color:var(--muted);cursor:pointer}
+.mainnav button[aria-pressed="true"]{background:var(--accent);color:var(--bg)}
 .hbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 @media (max-width:520px){.top-h h1{font-size:26px}.hbtns .patur-btn{font-size:13px;padding:6px 11px}}
 .cloud-btn.on{color:var(--accent);border-color:var(--accent)}
@@ -343,18 +346,21 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
     <h1 dir="ltr">MyMoney</h1>
     <div class="hbtns">
       <button class="patur-btn cloud-btn" id="cloudBtn" hidden>☁ התחברות לסנכרון</button>
-      <button class="patur-btn" id="paturBtn" aria-pressed="false">עוסק פטור</button>
     </div>
   </header>
+  <nav class="mainnav" aria-label="תפריט ראשי">
+    <button type="button" id="navMoney" aria-pressed="true">הכנסות והוצאות</button>
+    <button type="button" id="navPatur" aria-pressed="false">עוסק פטור</button>
+  </nav>
   <div class="note" id="importNote" hidden>הנתונים מהקישור נשמרו במכשיר הזה. כדי לשמור אותם בענן ולראות אותם גם באפליקציה המותקנת, צריך להתחבר. <button type="button" class="linkbtn">התחברות</button></div>
 
-    <div class="monthbar">
+    <div class="monthbar" id="monthBar">
       <button id="prevM" aria-label="חודש קודם">›</button>
       <h2 id="mTitle">אוקטובר 2026</h2>
       <button id="nextM" aria-label="חודש הבא">‹</button>
     </div>
 
-    <div class="kpis" role="tablist" aria-label="הכנסות או הוצאות קבועות">
+    <div class="kpis" id="kpiRow" role="tablist" aria-label="הכנסות או הוצאות קבועות">
       <button class="kpi kpi-link" id="kInBtn" role="tab" aria-selected="false" aria-controls="viewIn"><span class="lbl">הכנסות</span><span class="val" id="kIn">—</span><span class="sub" id="kInSub">משכורת + עסק</span></button>
       <button class="kpi kpi-link" id="kOutBtn" role="tab" aria-selected="true" aria-controls="viewOut"><span class="lbl">הוצאות קבועות</span><span class="val" id="kOut">—</span><span class="sub" id="kOutSub"></span></button>
       <div class="kpi left"><span class="lbl">רווח / הפסד</span><span class="val" id="kLeft">—</span><span class="sub" id="kLeftSub">הכנסות פחות הוצאות קבועות</span></div>
@@ -1264,16 +1270,22 @@ function exportXlsx(g){
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
 }
 $("incRefresh").addEventListener("click",shManual);
-let view="out"; try{ const sv=localStorage.getItem("view"); if(sv==="in"||sv==="patur") view=sv; }catch(e){}
+let view="out", moneyView="out"; try{ const sv=localStorage.getItem("view"); if(sv==="in"||sv==="patur") view=sv; const mv=localStorage.getItem("moneyView"); if(mv==="in") moneyView=mv; }catch(e){}
+if(view!=="patur") moneyView=view;
+// two sections: income & fixed expenses (month bar + totals), or osek patur on its own screen
 function setView(v){
-  view=v; try{localStorage.setItem("view",v)}catch(e){}
+  view=v; if(v!=="patur") moneyView=v;
+  try{ localStorage.setItem("view",v); localStorage.setItem("moneyView",moneyView); }catch(e){}
+  const pat=v==="patur";
+  $("navMoney").setAttribute("aria-pressed",!pat); $("navPatur").setAttribute("aria-pressed",pat);
+  $("monthBar").hidden=pat; $("kpiRow").hidden=pat;
   $("kInBtn").setAttribute("aria-selected",v==="in"); $("kOutBtn").setAttribute("aria-selected",v==="out");
-  $("paturBtn").setAttribute("aria-pressed",v==="patur");
-  $("viewIn").hidden=v!=="in"; $("viewOut").hidden=v!=="out"; $("viewPatur").hidden=v!=="patur";
+  $("viewIn").hidden=v!=="in"; $("viewOut").hidden=v!=="out"; $("viewPatur").hidden=!pat;
 }
 $("kInBtn").addEventListener("click",()=>setView("in"));
 $("kOutBtn").addEventListener("click",()=>setView("out"));
-$("paturBtn").addEventListener("click",()=>{setView(view==="patur"?"out":"patur");window.scrollTo({top:0});});
+$("navMoney").addEventListener("click",()=>{ setView(moneyView); window.scrollTo({top:0}); });
+$("navPatur").addEventListener("click",()=>{ setView("patur"); window.scrollTo({top:0}); });
 setView(view);
 
 function renderAll(){renderMonth();renderYear();renderCeiling();renderChecks();}
