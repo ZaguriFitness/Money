@@ -299,6 +299,14 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
 .simple th{color:var(--muted);font-weight:600;font-size:13px}
 .meter{height:14px;border-radius:7px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
 .meter span{display:block;height:100%;background:var(--accent)}
+.tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.task{position:relative;display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);padding:12px 14px 12px 34px;color:var(--ink);text-decoration:none;min-width:0}
+a.task:hover{border-color:var(--accent)}
+.task b{font-size:16px}
+.task .t-when{font-size:12px;font-weight:600;color:var(--accent)}
+.task .t-what{font-size:14px;color:var(--muted)}
+.task .t-go{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:18px}
+.task.hot{border-color:var(--warn)} .task.hot .t-when{color:var(--warn)}
 .todo{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:10px}
 .todo li>b{display:block;color:var(--accent)}
 .todo li span{display:block;font-size:15px}
@@ -387,9 +395,6 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
 
     <div class="view" id="viewPatur" hidden>
   <section class="paturv" id="paturSec">
-    <div class="box">
-      <a href="report.html" style="display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--accent);color:var(--bg);border-radius:10px;padding:12px 14px;text-decoration:none;font-weight:600">הדוח השנתי שלי: מה למלא, ואם מגיע לי החזר<span aria-hidden="true">←</span></a>
-    </div>
 
     <div class="box">
       <div class="group-h"><h2>המחזור שלך ב־2026</h2><span class="small muted num" id="ceilTxt"></span></div>
@@ -404,17 +409,26 @@ table.simple{border-collapse:collapse;width:100%;font-size:14px;font-variant-num
     </div>
 
     <div class="box">
-      <h2>מה צריך לעשות, ומתי</h2>
-      <ol class="todo">
-        <li><b>כל פעם שמקבלים כסף מהעסק</b><span>מוציאים <b>קבלה</b> (לא "חשבונית מס"). כל הקבלות של השנה = המחזור.</span></li>
-        <li><b>כל חודש</b><span>ביטוח לאומי כעצמאי: משלמים מקדמה לפי ההכנסה המשוערת. כשההכנסה משתנה, מעדכנים באזור האישי באתר ביטוח לאומי, כדי שלא תצטבר דרישה גדולה.</span></li>
-        <li><b>כל חודש</b><span>שומרים קבלות על הוצאות העסק (ציוד, חלק מהדלק, טלפון). הן מורידות את הרווח, ולכן גם את המס והביטוח הלאומי. כדאי גם לשים בצד 10%–15% מהכנסות העסק.</span></li>
-        <li><b>עד 31 בינואר</b><span>הצהרת מחזור למע"מ על השנה שעברה, באתר רשות המסים. זה הדיווח היחיד למע"מ. (יש שנים שבהן נותנים דחייה.)</span></li>
-        <li><b>עד סוף השנה</b><span>הפקדה לפנסיה, חובה לעצמאי, לפי הרווח מהעסק. קרן השתלמות לא חובה, אבל מורידה מס.</span></li>
-        <li><b>פעם בשנה, על השנה שעברה</b><span><b>דוח שנתי למס הכנסה</b> (טופס 1301), באתר רשות המסים. בדרך כלל עד סוף מאי, ולרוב יש דחייה. <a href="report.html">המדריך המלא בעמוד "הדוח השנתי שלי"</a>.</span></li>
-        <li><b>אחרי הדוח</b><span>ביטוח לאומי משווה את מה ששילמת לרווח האמיתי, ושולח החזר או דרישת תשלום.</span></li>
-        <li><b>אם עוברים את התקרה</b><span>מודיעים <b>מיד</b> למשרד מע"מ ועוברים לעוסק מורשה.</span></li>
-      </ol>
+      <h2>המשימות שלך</h2>
+      <p class="small muted">כמו באזור האישי של רשות המסים: לחיצה על משימה פותחת את המקום שבו עושים אותה.</p>
+      <div class="tasks">
+        <a class="task" href="https://secapp.taxes.gov.il/sr-ezor-ishi/main/main-page" target="_blank" rel="noopener"><span class="t-when">פעם בשנה · עד 31 בינואר</span><b>הצהרת עוסק פטור (מע״מ)</b><span class="t-what">כמה העסק קיבל בשנה שעברה. בלי תשלום.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task" href="https://secapp.taxes.gov.il/sr-ezor-ishi/main/main-page" target="_blank" rel="noopener"><span class="t-when">פעם בשנה · על השנה שעברה</span><b>דיווח מקוצר לעסק זעיר</b><span class="t-what">הדוח השנתי שלך למס הכנסה. במסלול עסק זעיר מורידים 30% מהמחזור כהוצאות, בלי קבלות.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task" href="report.html"><span class="t-when">לפני שמגישים</span><b>המדריך לדוח השנתי</b><span class="t-what">מה למלא, איפה, ואם מגיע לך החזר.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task" href="https://secapp.taxes.gov.il/sr-ezor-ishi/main/main-page" target="_blank" rel="noopener"><span class="t-when">בתחילת השנה, או כשמתחילים עבודה חדשה</span><b>תיאום מס</b><span class="t-what">יש לך גם משכורת (קנטרי) וגם עסק. תיאום מס קובע כמה מס יורד מהמשכורת, כדי שלא ינכו ממך יותר מדי.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task" href="https://secapp.taxes.gov.il/sr-ezor-ishi/main/main-page" target="_blank" rel="noopener"><span class="t-when">לא חובה · כל חודש או מתי שנוח</span><b>מקדמת מס לעסק זעיר</b><span class="t-what">תשלום מראש על חשבון המס של השנה, כדי שלא תצטבר יתרה גדולה בדוח.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task" href="https://www.btl.gov.il/" target="_blank" rel="noopener"><span class="t-when">כל חודש</span><b>ביטוח לאומי כעצמאי</b><span class="t-what">מקדמות לפי ההכנסה המשוערת. כשההכנסה מהעסק משתנה, מעדכנים באזור האישי, כדי שלא תגיע דרישה גדולה אחרי הדוח.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task" href="https://secapp.taxes.gov.il/sr-ezor-ishi/main/main-page" target="_blank" rel="noopener"><span class="t-when">עד סוף מרץ</span><b>טופס 106</b><span class="t-what">מקבלים מהמעסיק (קנטרי), ובאזור האישי. צריך אותו לדוח השנתי.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <a class="task hot" href="https://secapp.taxes.gov.il/sr-ezor-ishi/main/main-page" target="_blank" rel="noopener"><span class="t-when">לבדוק פעם בשנה</span><b>מענק עבודה</b><span class="t-what">באזור האישי שלך כתוב "ייתכן זכאות". מענק שהמדינה נותנת לעובדים ולעצמאים עם הכנסה לא גבוהה. שווה לבדוק.</span><span class="t-go" aria-hidden="true">←</span></a>
+        <div class="task"><span class="t-when">עד סוף השנה</span><b>פנסיה לעצמאי</b><span class="t-what">הפקדה חובה לפי הרווח מהעסק. מורידה גם מס. קרן השתלמות לא חובה, אבל גם היא מורידה מס.</span></div>
+      </div>
+      <h3 style="margin-top:6px">הרגלים קבועים</h3>
+      <ul class="clean">
+        <li>על כל תשלום שמקבלים מהעסק: <b>קבלה</b> מיד (לא "חשבונית מס").</li>
+        <li>שומרים קבלות על הוצאות העסק. הן מורידות את המס והביטוח הלאומי.</li>
+        <li>שמים בצד 10%–15% מהכנסות העסק, בשביל מס וביטוח לאומי.</li>
+        <li>אם המחזור עובר את התקרה: מודיעים <b>מיד</b> למע״מ ועוברים לעוסק מורשה.</li>
+      </ul>
       <p class="small muted">להעמקה: למטה יש פירוט של מס הכנסה, ביטוח לאומי, פנסיה ועוד.</p>
     </div>
 
