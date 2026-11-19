@@ -851,7 +851,7 @@ function renderCeiling(){
   $("ceilKv").innerHTML=`<span>ממוצע לחודש</span><span class="v">${fmt(avg)} ₪</span>
     <span>בקצב הזה, עד סוף השנה</span><span class="v">${fmt(avg*12)} ₪</span>
     <span>נשאר עד התקרה</span><span class="v">${fmt(Math.max(0,CEIL-tot))} ₪</span>`;
-  $("ceilNote").textContent=`נספר: ${["HIIT","EMS"].concat(PROV.map(p=>p.name),["אימונים אישיים"]).join(", ")}. לא נספרת המשכורת מקנטרי (שם אתה שכיר). המשמרות נספרות לפי חודש העבודה.`+(missing.length?` עוד לא נקראו מהיומן: ${missing.join(", ")}.`:"");
+  $("ceilNote").textContent=`הסכום הזה הוא המחזור של העסק בלבד, כי רק הוא נבדק מול התקרה של עוסק פטור: ${["HIIT","EMS"].concat(PROV.map(p=>p.name),["אימונים אישיים"]).join(", ")}. המשכורת מקנטרי לא נכנסת לתקרה, כי שם אתה שכיר ולא עסק. היא כן מופיעה בהכנסות שלך, ובדוח השנתי למס הכנסה. המשמרות נספרות לפי חודש העבודה.`+(missing.length?` עוד לא נקראו מהיומן: ${missing.join(", ")}.`:"");
   if(view==="patur") for(let m=1;m<=last;m++) ensureMonth(m);
   $("whoList").innerHTML=`<li><b>עוסק פטור</b> על: HIIT, EMS${PROV.map(p=>", "+esc(p.name)).join("")}, אימונים אישיים. מהכסף הזה אף אחד לא מנכה לך כלום: את מס ההכנסה ואת הביטוח הלאומי עליו אתה משלם בעצמך.</li>
     <li><b>שכיר</b> בקנטרי: המעסיק מנכה מס וביטוח לאומי בתלוש, ובסוף השנה מקבלים ממנו טופס 106.</li>
