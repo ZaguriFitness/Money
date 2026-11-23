@@ -183,9 +183,13 @@ button.kpi-link[aria-selected="true"]{border-color:var(--accent);background:var(
 .own-toggle{font:inherit;color:inherit;background:none;border:0;border-bottom:2px solid var(--warn);width:100%;text-align:right;cursor:pointer}
 .own-toggle .caret{color:var(--warn);font-size:14px;width:12px} .lg-own .lg-sum{color:var(--warn)}
 .own-item{display:flex;align-items:center;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
-.own-a{font-weight:600;min-width:70px} .own-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.own-a{font-weight:600;min-width:70px} .own-n{flex:1 1 90px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.own-item .how{margin-inline-start:auto}
 .cash-tg{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 11px;cursor:pointer;white-space:nowrap}
 .cash-tg.on{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.how{display:inline-flex;gap:4px}
+.own-edit{background:none;border:0;padding:0;font:inherit;font-weight:600;color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px;text-align:right}
+.own-item{flex-wrap:wrap}
 .own-form{display:flex;flex-wrap:wrap;gap:6px;padding:10px 2px}
 .own-form input{font:inherit;font-size:16px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:7px 9px;min-width:0}
 .own-form .own-in{width:100px;direction:ltr;text-align:left} .own-form .own-name{flex:1 1 120px} .own-form .addbtn{padding:8px 16px}
@@ -1151,11 +1155,15 @@ function renderProvs(){ [...$("provBoxes").children].forEach(b=>{ if(!PROV.some(
 /* ---------- personal training paid to me directly: amounts added by hand, each kept in the month ---------- */
 const ownList=m=>{ const v=(getM(m).income||{}).own; return Array.isArray(v)?v:[]; };
 const ownTotal=m=>Math.round(ownList(m).reduce((a,x)=>a+(Number(x.a)||0),0)*100)/100;
-let ownOpen=false, ownArmed=null, ownCashNew=false;
+let ownOpen=false, ownArmed=null, ownHowNew=null;
+// how a payment came in: "cash" or "bit" (older entries stored cash:true)
+const howOf=x=>x.how||(x.cash?"cash":null);
+const HOW=[["cash","מזומן"],["bit","ביט"]];
+const howChips=(cur_,attr)=>HOW.map(([k,l])=>`<button type="button" class="cash-tg${cur_===k?" on":""}" data-how="${k}" ${attr} aria-pressed="${cur_===k}">${l}</button>`).join("");
 function renderOwn(){
   const box=$("ownBox"); if(!box) return;
   const list=ownList(cur), tot=ownTotal(cur);
-  const items=list.map((x,i)=>`<div class="own-item"><span class="num own-a">${fmt2(x.a)} ₪</span><span class="own-n">${esc(x.n||"")}</span><span class="small muted num">${x.d?`${Number(x.d.slice(8,10))}.${Number(x.d.slice(5,7))}`:""}</span><button type="button" class="cash-tg${x.cash?" on":""}" data-i="${i}" aria-pressed="${!!x.cash}">${x.cash?"מזומן":"לא מזומן"}</button><button type="button" class="logdel${ownArmed===i?" armed":""}" data-i="${i}" aria-label="להסיר">${ownArmed===i?"להסיר?":"×"}</button></div>`).join("");
+  const items=list.map((x,i)=>`<div class="own-item"><button type="button" class="num own-a own-edit" data-i="${i}" aria-label="לשנות את הסכום">${fmt2(x.a)} ₪ ✎</button><span class="own-n">${esc(x.n||"")}</span><span class="small muted num">${x.d?`${Number(x.d.slice(8,10))}.${Number(x.d.slice(5,7))}`:""}</span><span class="how">${howChips(howOf(x),`data-i="${i}"`)}</span><button type="button" class="logdel${ownArmed===i?" armed":""}" data-i="${i}" aria-label="להסיר">${ownArmed===i?"להסיר?":"×"}</button></div>`).join("");
   const now=new Date(), dd=(now.getFullYear()===YEAR&&now.getMonth()+1===cur)?now.getDate():1;
   box.innerHTML=`<div class="lg lg-own">
     <button type="button" class="lg-h own-toggle" aria-expanded="${ownOpen}"><span class="caret" aria-hidden="true">${ownOpen?"▾":"‹"}</span><b>אימונים אישיים</b><span class="small muted">${list.length?(list.length===1?"תשלום אחד":list.length+" תשלומים"):"ישירות אליי"}</span><span class="lg-sum num">${fmt2(tot)} ₪</span></button>
@@ -1165,17 +1173,26 @@ function renderOwn(){
         <input class="own-in" type="number" inputmode="decimal" step="any" placeholder="סכום" aria-label="סכום" required>
         <input class="own-name" type="text" maxlength="40" placeholder="ממי (לא חובה)" aria-label="ממי">
         <input class="own-date" type="date" value="${YEAR}-${String(cur).padStart(2,"0")}-${String(dd).padStart(2,"0")}" aria-label="תאריך">
-        <button type="button" class="cash-tg new${ownCashNew?" on":""}" aria-pressed="${ownCashNew}">${ownCashNew?"מזומן":"לא מזומן"}</button>
+        <span class="how new">${howChips(ownHowNew,"")}</span>
         <button type="submit" class="addbtn">+ הוספה</button>
       </form>
     </div>
   </div>`;
+  const put=(i,fn)=>{ const next=list.map((x,j)=>{ if(j!==i) return x; const y=Object.assign({},x); fn(y); return y; }); setIncome(cur,"own",next); };
   box.querySelector(".own-toggle").addEventListener("click",()=>{ownOpen=!ownOpen; renderOwn();});
-  box.querySelectorAll(".own-item .cash-tg").forEach(b=>b.addEventListener("click",()=>{
-    const i=Number(b.dataset.i), next=list.map((x,j)=>{ if(j!==i) return x; const y=Object.assign({},x); if(y.cash) delete y.cash; else y.cash=true; return y; });
-    setIncome(cur,"own",next);
+  box.querySelectorAll(".own-edit").forEach(b=>b.addEventListener("click",()=>{
+    const i=Number(b.dataset.i), v=prompt("מה הסכום?",String(list[i].a)); if(v===null) return;
+    const n=Math.abs(Number(v.trim())); if(!v.trim()||!n) return;
+    put(i,y=>{ y.a=n; });
   }));
-  box.querySelector(".cash-tg.new").addEventListener("click",()=>{ ownCashNew=!ownCashNew; const b=box.querySelector(".cash-tg.new"); b.classList.toggle("on",ownCashNew); b.setAttribute("aria-pressed",ownCashNew); b.textContent=ownCashNew?"מזומן":"לא מזומן"; });
+  box.querySelectorAll(".own-item .cash-tg").forEach(b=>b.addEventListener("click",()=>{
+    const i=Number(b.dataset.i), k=b.dataset.how;
+    put(i,y=>{ const was=howOf(y); delete y.cash; if(was===k) delete y.how; else y.how=k; });
+  }));
+  box.querySelectorAll(".how.new .cash-tg").forEach(b=>b.addEventListener("click",()=>{
+    ownHowNew=ownHowNew===b.dataset.how?null:b.dataset.how;
+    box.querySelectorAll(".how.new .cash-tg").forEach(c=>{ const on=c.dataset.how===ownHowNew; c.classList.toggle("on",on); c.setAttribute("aria-pressed",on); });
+  }));
   box.querySelectorAll(".own-item .logdel").forEach(b=>b.addEventListener("click",()=>{
     const i=Number(b.dataset.i);
     if(ownArmed!==i){ ownArmed=i; renderOwn(); return; }
@@ -1184,7 +1201,7 @@ function renderOwn(){
   box.querySelector(".own-form").addEventListener("submit",e=>{
     e.preventDefault(); const f=e.target;
     const a=Math.abs(Number(f.querySelector(".own-in").value)); if(!a) return;
-    const x={a,d:f.querySelector(".own-date").value||null}; const n=f.querySelector(".own-name").value.trim(); if(n) x.n=n; if(ownCashNew) x.cash=true;
+    const x={a,d:f.querySelector(".own-date").value||null}; const n=f.querySelector(".own-name").value.trim(); if(n) x.n=n; if(ownHowNew) x.how=ownHowNew;
     setIncome(cur,"own",list.concat([x]));
   });
 }
