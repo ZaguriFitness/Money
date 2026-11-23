@@ -772,7 +772,7 @@ function renderPayments(){
   });
   G.querySelectorAll(".typ-edit").forEach(b=>b.addEventListener("click",()=>{
     const p=P.find(x=>x.k===b.dataset.k); if(!p||!db) return;
-    const v=prompt(`כמה ${p.name} בדרך כלל?`,String(p.typ)); if(v===null) return;
+    const v=prompt(`כמה ${p.name} בדרך כלל? (עכשיו: ${p.typ})`,""); if(v===null||!v.trim()) return;
     const n=Number(v.trim()); if(!v.trim()||isNaN(n)) return;
     savePayment(p.k,{typ:n});
   }));
@@ -790,10 +790,10 @@ function editDay(p,f){
   const A=f==="tx"?"txDay":"day", B=f==="tx"?"txDayTo":"dayTo";
   const now=p[A]?(p[B]?p[A]+"-"+p[B]:String(p[A])):"";
   const q=f==="tx"?`באיזה יום בחודש נעשית העסקה של ${p.name}?`:`באיזה יום בחודש יורד החיוב של ${p.name}?`;
-  const v=prompt(`${q}\nמספר, למשל 2. אם זה בערך, טווח, למשל 13-15. ריק = בלי תאריך.`,now);
-  if(v===null) return;
+  const v=prompt(`${q}${now?` (עכשיו: ${now})`:""}\nמספר, למשל 2. אם זה בערך, טווח, למשל 13-15. כדי למחוק: 0.`,"");
+  if(v===null||!v.trim()) return;
   const t=v.trim().replace(/[–—]/g,"-");
-  if(t===""){ savePayment(p.k,{[A]:null,[B]:null}); return; }
+  if(t==="0"){ savePayment(p.k,{[A]:null,[B]:null}); return; }
   const m=t.match(/^(\d{1,2})(?:\s*-\s*(\d{1,2}))?$/);
   const a=m&&Number(m[1]), b=m&&m[2]?Number(m[2]):null;
   if(!m||a<1||a>31||(b&&(b<1||b>31||b<=a))){ toast("לא הבנתי. כותבים מספר בין 1 ל־31, או טווח כמו 13-15."); return; }
@@ -1139,10 +1139,11 @@ function renderProv(p){
   box.querySelector(".prov-toggle").addEventListener("click",()=>{provOpen[p.id]=!provOpen[p.id]; renderProv(p);});
   box.querySelectorAll(".cash-edit").forEach(b=>b.addEventListener("click",()=>{
     const m=Number(b.dataset.m), old=(getM(m).income||{})[p.id];
-    const v=prompt(`כמה ${m===cur?"נכנס":"ייכנס"} לבנק מ${p.name} ב${MONTHS[m-1]}? (ריק = לפי היומן)`, typeof old==="number"?String(old):"");
-    if(v===null) return;
-    const t=v.trim(); if(t!==""&&isNaN(Number(t))) return;
-    setIncome(m,p.id,t===""?null:Number(t));
+    const v=prompt(`כמה ${m===cur?"נכנס":"ייכנס"} לבנק מ${p.name} ב${MONTHS[m-1]}?${typeof old==="number"?` (עכשיו: ${old})`:""}\nכדי לחזור לחישוב לפי היומן: כתוב -`,"");
+    if(v===null||!v.trim()) return;
+    const t=v.trim(); if(t==="-"){ setIncome(m,p.id,null); return; }
+    if(isNaN(Number(t))) return;
+    setIncome(m,p.id,Number(t));
   }));
   box.querySelector(".prov-in").addEventListener("change",e=>{const v=e.target.value.trim(); setIncome(cur,fld,v===""?null:Number(v));});
   box.querySelectorAll(".pchip").forEach(b=>b.addEventListener("click",()=>{
@@ -1181,7 +1182,7 @@ function renderOwn(){
   const put=(i,fn)=>{ const next=list.map((x,j)=>{ if(j!==i) return x; const y=Object.assign({},x); fn(y); return y; }); setIncome(cur,"own",next); };
   box.querySelector(".own-toggle").addEventListener("click",()=>{ownOpen=!ownOpen; renderOwn();});
   box.querySelectorAll(".own-edit").forEach(b=>b.addEventListener("click",()=>{
-    const i=Number(b.dataset.i), v=prompt("מה הסכום?",String(list[i].a)); if(v===null) return;
+    const i=Number(b.dataset.i), v=prompt(`מה הסכום? (עכשיו: ${list[i].a})`,""); if(v===null||!v.trim()) return;
     const n=Math.abs(Number(v.trim())); if(!v.trim()||!n) return;
     put(i,y=>{ y.a=n; });
   }));
